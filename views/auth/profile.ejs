@@ -55,6 +55,14 @@
                     </div>
 
                     <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth"
+                               placeholder="Date of Birth"
+                               value="<%= user.dateOfBirth || '' %>">
+                        <label for="dateOfBirth">Date of Birth</label>
+                        <div class="form-text">Used to pre-fill PRC generation forms</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
                         <input type="email" class="form-control" id="email" name="email"
                                placeholder="Email Address" required readonly
                                value="<%= user.email %>">

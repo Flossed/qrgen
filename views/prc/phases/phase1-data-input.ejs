@@ -70,7 +70,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="fn" name="fn"
                                placeholder="Family name" required maxlength="40"
-                               value="<%= prcSession?.formData?.fn || '' %>">
+                               value="<%= prcSession?.formData?.fn || user?.lastName || '' %>">
                         <label for="fn">Family Name *</label>
                     </div>
                 </div>
@@ -79,7 +79,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="gn" name="gn"
                                placeholder="Given name(s)" required maxlength="40"
-                               value="<%= prcSession?.formData?.gn || '' %>">
+                               value="<%= prcSession?.formData?.gn || user?.firstName || '' %>">
                         <label for="gn">Given Name(s) *</label>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="dob" name="dob"
                                placeholder="Date of birth" required
-                               value="<%= prcSession?.formData?.dob || '' %>">
+                               value="<%= prcSession?.formData?.dob || user?.dateOfBirth || '' %>">
                         <label for="dob">Date of Birth *</label>
                     </div>
                 </div>

@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
         trim: true,
         maxlength: 100
     },
+    dateOfBirth: {
+        type: String,
+        trim: true,
+        match: [/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/, 'Date of birth must be in format YYYY-MM-DD']
+    },
     country: {
         type: String,
         enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'],

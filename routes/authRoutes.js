@@ -578,6 +578,10 @@ router.post('/profile', [
         .isLength({ min: 1, max: 50 })
         .withMessage('Last name is required and must be less than 50 characters')
         .trim(),
+    body('dateOfBirth')
+        .optional({ checkFalsy: true })
+        .matches(/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/)
+        .withMessage('Date of birth must be in format YYYY-MM-DD'),
     body('organization')
         .optional()
         .isLength({ max: 100 })
@@ -603,7 +607,7 @@ router.post('/profile', [
             });
         }
 
-        const { firstName, lastName, organization } = req.body;
+        const { firstName, lastName, dateOfBirth, organization } = req.body;
         logger.debug('Updating user profile', { userId: req.session.userId, firstName, lastName });
 
         const user = await User.findById(req.session.userId);
@@ -615,6 +619,7 @@ router.post('/profile', [
         // Update fields
         user.firstName = firstName;
         user.lastName = lastName;
+        user.dateOfBirth = dateOfBirth || '';
         user.organization = organization || '';
         user.updatedAt = Date.now();
 
@@ -623,7 +628,7 @@ router.post('/profile', [
         logger.debug('Profile updated successfully', {
             userId: user._id,
             username: user.username,
-            updatedFields: ['firstName', 'lastName', 'organization']
+            updatedFields: ['firstName', 'lastName', 'dateOfBirth', 'organization']
         });
 
         req.session.success = 'Profile updated successfully';
