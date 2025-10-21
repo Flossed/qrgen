@@ -3,6 +3,7 @@ const router = express.Router();
 const PRC = require('../models/PRC');
 const Certificate = require('../models/Certificate');
 const { isAuthenticated } = require('../middleware/auth');
+const { checkOnboardingComplete } = require('../middleware/onboarding');
 const { body, validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const { getLogger, logEntry, logExit, logException } = require('../config/logger');
@@ -82,7 +83,7 @@ router.get('/', isAuthenticated, async (req, res) => {
 });
 
 // Phase 1: Data Input Form
-router.get('/create', isAuthenticated, (req, res) => {
+router.get('/create', isAuthenticated, checkOnboardingComplete, (req, res) => {
     res.render('prc/phases/phase1-data-input', {
         title: 'Create PRC - Data Input',
         user: req.user,
@@ -93,7 +94,7 @@ router.get('/create', isAuthenticated, (req, res) => {
 });
 
 // Phase 1: Process Data Input
-router.post('/create', isAuthenticated, [
+router.post('/create', isAuthenticated, checkOnboardingComplete, [
     // Validation rules based on eEHIC schema
     body('ic')
         .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
@@ -242,7 +243,7 @@ router.post('/create', isAuthenticated, [
 });
 
 // Phase 2: JWT Generation and QR Code Creation
-router.get('/generate', isAuthenticated, async (req, res) => {
+router.get('/generate', isAuthenticated, checkOnboardingComplete, async (req, res) => {
     try {
         logger.debug('GET /generate - Start', {
             hasSession: !!req.session.prcData,
@@ -306,7 +307,7 @@ router.get('/generate', isAuthenticated, async (req, res) => {
 });
 
 // Phase 2: Process JWT Generation
-router.post('/generate', isAuthenticated, [
+router.post('/generate', isAuthenticated, checkOnboardingComplete, [
     body('certificateId')
         .isMongoId()
         .withMessage('Please select a valid certificate'),

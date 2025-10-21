@@ -582,6 +582,10 @@ router.post('/profile', [
         .optional({ checkFalsy: true })
         .matches(/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/)
         .withMessage('Date of birth must be in format YYYY-MM-DD'),
+    body('countryOfResidence')
+        .optional({ checkFalsy: true })
+        .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
+        .withMessage('Please select a valid country'),
     body('organization')
         .optional()
         .isLength({ max: 100 })
@@ -607,7 +611,7 @@ router.post('/profile', [
             });
         }
 
-        const { firstName, lastName, dateOfBirth, organization } = req.body;
+        const { firstName, lastName, dateOfBirth, countryOfResidence, organization } = req.body;
         logger.debug('Updating user profile', { userId: req.session.userId, firstName, lastName });
 
         const user = await User.findById(req.session.userId);
@@ -620,15 +624,22 @@ router.post('/profile', [
         user.firstName = firstName;
         user.lastName = lastName;
         user.dateOfBirth = dateOfBirth || '';
+        user.countryOfResidence = countryOfResidence || '';
         user.organization = organization || '';
         user.updatedAt = Date.now();
+
+        // Check if profile is complete (for non-issuer users)
+        if (user.role !== 'issuer') {
+            user.profileCompleted = !!(user.firstName && user.lastName && user.dateOfBirth && user.countryOfResidence);
+        }
 
         await user.save();
 
         logger.debug('Profile updated successfully', {
             userId: user._id,
             username: user.username,
-            updatedFields: ['firstName', 'lastName', 'dateOfBirth', 'organization']
+            profileCompleted: user.profileCompleted,
+            updatedFields: ['firstName', 'lastName', 'dateOfBirth', 'countryOfResidence', 'organization']
         });
 
         req.session.success = 'Profile updated successfully';

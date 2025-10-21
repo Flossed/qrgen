@@ -55,6 +55,28 @@ const userSchema = new mongoose.Schema({
         enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'],
         required: function() { return this.role === 'issuer'; }
     },
+    countryOfResidence: {
+        type: String,
+        enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK']
+    },
+    // Onboarding fields
+    personalIdNumber: {
+        type: String,
+        trim: true,
+        maxlength: 20
+    },
+    assignedInstitution: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'HealthcareInstitution'
+    },
+    profileCompleted: {
+        type: Boolean,
+        default: false
+    },
+    institutionRegistered: {
+        type: Boolean,
+        default: false
+    },
     institutionId: {
         type: String,
         trim: true,

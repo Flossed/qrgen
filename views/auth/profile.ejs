@@ -59,8 +59,50 @@
                                placeholder="Date of Birth"
                                value="<%= user.dateOfBirth || '' %>">
                         <label for="dateOfBirth">Date of Birth</label>
-                        <div class="form-text">Used to pre-fill PRC generation forms</div>
+                        <div class="form-text">Required for onboarding</div>
                     </div>
+
+                    <% if (user.role !== 'issuer') { %>
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="countryOfResidence" name="countryOfResidence">
+                            <option value="">Select country of residence</option>
+                            <option value="AT" <%= user.countryOfResidence === 'AT' ? 'selected' : '' %>>Austria</option>
+                            <option value="BE" <%= user.countryOfResidence === 'BE' ? 'selected' : '' %>>Belgium</option>
+                            <option value="BG" <%= user.countryOfResidence === 'BG' ? 'selected' : '' %>>Bulgaria</option>
+                            <option value="HR" <%= user.countryOfResidence === 'HR' ? 'selected' : '' %>>Croatia</option>
+                            <option value="CY" <%= user.countryOfResidence === 'CY' ? 'selected' : '' %>>Cyprus</option>
+                            <option value="CZ" <%= user.countryOfResidence === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
+                            <option value="DK" <%= user.countryOfResidence === 'DK' ? 'selected' : '' %>>Denmark</option>
+                            <option value="EE" <%= user.countryOfResidence === 'EE' ? 'selected' : '' %>>Estonia</option>
+                            <option value="FI" <%= user.countryOfResidence === 'FI' ? 'selected' : '' %>>Finland</option>
+                            <option value="FR" <%= user.countryOfResidence === 'FR' ? 'selected' : '' %>>France</option>
+                            <option value="DE" <%= user.countryOfResidence === 'DE' ? 'selected' : '' %>>Germany</option>
+                            <option value="GR" <%= user.countryOfResidence === 'GR' ? 'selected' : '' %>>Greece</option>
+                            <option value="HU" <%= user.countryOfResidence === 'HU' ? 'selected' : '' %>>Hungary</option>
+                            <option value="IE" <%= user.countryOfResidence === 'IE' ? 'selected' : '' %>>Ireland</option>
+                            <option value="IT" <%= user.countryOfResidence === 'IT' ? 'selected' : '' %>>Italy</option>
+                            <option value="LV" <%= user.countryOfResidence === 'LV' ? 'selected' : '' %>>Latvia</option>
+                            <option value="LT" <%= user.countryOfResidence === 'LT' ? 'selected' : '' %>>Lithuania</option>
+                            <option value="LU" <%= user.countryOfResidence === 'LU' ? 'selected' : '' %>>Luxembourg</option>
+                            <option value="MT" <%= user.countryOfResidence === 'MT' ? 'selected' : '' %>>Malta</option>
+                            <option value="NL" <%= user.countryOfResidence === 'NL' ? 'selected' : '' %>>Netherlands</option>
+                            <option value="PL" <%= user.countryOfResidence === 'PL' ? 'selected' : '' %>>Poland</option>
+                            <option value="PT" <%= user.countryOfResidence === 'PT' ? 'selected' : '' %>>Portugal</option>
+                            <option value="RO" <%= user.countryOfResidence === 'RO' ? 'selected' : '' %>>Romania</option>
+                            <option value="SK" <%= user.countryOfResidence === 'SK' ? 'selected' : '' %>>Slovakia</option>
+                            <option value="SI" <%= user.countryOfResidence === 'SI' ? 'selected' : '' %>>Slovenia</option>
+                            <option value="ES" <%= user.countryOfResidence === 'ES' ? 'selected' : '' %>>Spain</option>
+                            <option value="SE" <%= user.countryOfResidence === 'SE' ? 'selected' : '' %>>Sweden</option>
+                            <option value="IS" <%= user.countryOfResidence === 'IS' ? 'selected' : '' %>>Iceland</option>
+                            <option value="LI" <%= user.countryOfResidence === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
+                            <option value="NO" <%= user.countryOfResidence === 'NO' ? 'selected' : '' %>>Norway</option>
+                            <option value="CH" <%= user.countryOfResidence === 'CH' ? 'selected' : '' %>>Switzerland</option>
+                            <option value="UK" <%= user.countryOfResidence === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                        </select>
+                        <label for="countryOfResidence">Country of Residence</label>
+                        <div class="form-text">Required for onboarding</div>
+                    </div>
+                    <% } %>
 
                     <div class="form-floating mb-3">
                         <input type="email" class="form-control" id="email" name="email"

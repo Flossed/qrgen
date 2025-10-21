@@ -162,6 +162,11 @@ appLogger.trace('Registering certificate routes');
 const certRoutes = require('./routes/certRoutes');
 app.use('/certificates', certRoutes);
 
+// Institution routes
+appLogger.trace('Registering institution routes');
+const institutionRoutes = require('./routes/institutionRoutes');
+app.use('/institution', institutionRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logException('expressErrorHandler', err, {

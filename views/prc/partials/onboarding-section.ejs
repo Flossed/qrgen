@@ -1,0 +1,147 @@
+<% if (user.role !== 'issuer' && !user.institutionRegistered) { %>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check me-2"></i>Onboarding Process
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Welcome <%= user.email %>!</strong>
+                    <br>
+                    Please complete the onboarding process before requesting a PRC.
+                </div>
+
+                <div class="row g-3">
+                    <!-- Step 1: Complete Profile -->
+                    <div class="col-md-4">
+                        <div class="card h-100 <%= user.profileCompleted ? 'border-success' : (!user.institutionRegistered ? 'border-warning' : 'border-secondary') %> shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <% if (user.profileCompleted) { %>
+                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                                    <% } else { %>
+                                        <i class="bi bi-person-circle <%= !user.institutionRegistered ? 'text-warning' : 'text-secondary' %>" style="font-size: 3rem;"></i>
+                                    <% } %>
+                                </div>
+                                <h6 class="card-title">
+                                    <span class="badge <%= user.profileCompleted ? 'bg-success' : (!user.institutionRegistered ? 'bg-warning' : 'bg-secondary') %> mb-2">
+                                        Step 1
+                                    </span>
+                                </h6>
+                                <h5 class="mb-3">Complete Profile</h5>
+                                <p class="text-muted small mb-3">
+                                    Add your first name, last name, date of birth, and country of residence
+                                </p>
+                                <% if (!user.profileCompleted) { %>
+                                    <a href="/auth/profile" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil me-1"></i>Complete Profile
+                                    </a>
+                                <% } else { %>
+                                    <button class="btn btn-success btn-sm" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Completed
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Register with Healthcare Institution -->
+                    <div class="col-md-4">
+                        <div class="card h-100 <%= user.institutionRegistered ? 'border-success' : (user.profileCompleted ? 'border-warning' : 'border-secondary') %> shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <% if (user.institutionRegistered) { %>
+                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                                    <% } else if (user.profileCompleted) { %>
+                                        <i class="bi bi-hospital text-warning" style="font-size: 3rem;"></i>
+                                    <% } else { %>
+                                        <i class="bi bi-hospital text-secondary" style="font-size: 3rem;"></i>
+                                    <% } %>
+                                </div>
+                                <h6 class="card-title">
+                                    <span class="badge <%= user.institutionRegistered ? 'bg-success' : (user.profileCompleted ? 'bg-warning' : 'bg-secondary') %> mb-2">
+                                        Step 2
+                                    </span>
+                                </h6>
+                                <h5 class="mb-3">Register Institution</h5>
+                                <p class="text-muted small mb-3">
+                                    Select your healthcare institution and receive your Personal ID
+                                </p>
+                                <% if (user.institutionRegistered) { %>
+                                    <button class="btn btn-success btn-sm mb-2" disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Completed
+                                    </button>
+                                    <% if (user.assignedInstitution) { %>
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block">Personal ID:</small>
+                                            <small class="badge bg-secondary"><%= user.personalIdNumber %></small>
+                                        </div>
+                                        <form action="/institution/cancel" method="POST" class="mt-2">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                    onclick="return confirm('Cancel healthcare institution registration? This will remove your Personal ID.')">
+                                                <i class="bi bi-x-circle me-1"></i>Cancel Registration
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                <% } else if (user.profileCompleted) { %>
+                                    <a href="/institution/list" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-hospital me-1"></i>Select Institution
+                                    </a>
+                                <% } else { %>
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="bi bi-lock me-1"></i>Complete Step 1 First
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Ready to Request EHIC -->
+                    <div class="col-md-4">
+                        <div class="card h-100 <%= (user.profileCompleted && user.institutionRegistered) ? 'border-success' : 'border-secondary' %> shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <% if (user.profileCompleted && user.institutionRegistered) { %>
+                                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                                    <% } else { %>
+                                        <i class="bi bi-credit-card text-secondary" style="font-size: 3rem;"></i>
+                                    <% } %>
+                                </div>
+                                <h6 class="card-title">
+                                    <span class="badge <%= (user.profileCompleted && user.institutionRegistered) ? 'bg-success' : 'bg-secondary' %> mb-2">
+                                        Step 3
+                                    </span>
+                                </h6>
+                                <h5 class="mb-3">Ready for EHIC</h5>
+                                <p class="text-muted small mb-3">
+                                    Your onboarding is complete! You can now request an EHIC card
+                                </p>
+                                <% if (user.profileCompleted && user.institutionRegistered) { %>
+                                    <a href="/prc/create" class="btn btn-success btn-sm">
+                                        <i class="bi bi-credit-card me-1"></i>Request PRC
+                                    </a>
+                                <% } else { %>
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="bi bi-lock me-1"></i>Complete Previous Steps
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        A PRC (Provisional Replacement Certificate) is a derived document from your EHIC with a maximum lifespan of 3 months
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
