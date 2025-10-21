@@ -1,0 +1,621 @@
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-qr-code me-2"></i>
+        Phase 3: QR Code Generation
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-4">
+            Generate the QR code from the JWT token following eEHIC specifications:
+            JWT → ZLIB compression → Base45 encoding → QR Code
+        </p>
+
+        <div class="row">
+            <!-- JWT Source -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-code-square me-2"></i>
+                        JWT Source
+                    </div>
+                    <div class="card-body">
+                        <% if (typeof prcSession !== 'undefined' && prcSession.jwt) { %>
+                            <div class="mb-3">
+                                <label class="form-label small">Signed JWT Token:</label>
+                                <textarea class="form-control font-monospace" rows="6" readonly
+                                          style="font-size: 0.75rem;"><%= prcSession.jwt %></textarea>
+                            </div>
+
+                            <dl class="row small">
+                                <dt class="col-sm-5">Token Length:</dt>
+                                <dd class="col-sm-7"><%= prcSession.jwt.length %> characters</dd>
+
+                                <dt class="col-sm-5">Algorithm:</dt>
+                                <dd class="col-sm-7" id="jwtAlgorithm">-</dd>
+
+                                <dt class="col-sm-5">Key ID:</dt>
+                                <dd class="col-sm-7" id="jwtKid">-</dd>
+                            </dl>
+
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="analyzeJWT">
+                                <i class="bi bi-search me-1"></i>Analyze JWT
+                            </button>
+                        <% } else { %>
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No JWT available. Please complete Phase 2 first.</p>
+                                <a href="/prc/generate?phase=2" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-arrow-left me-1"></i>Go to Phase 2
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Generation Pipeline -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-gear me-2"></i>
+                        Generation Pipeline
+                    </div>
+                    <div class="card-body">
+                        <div class="pipeline-steps">
+                            <div class="step-item" id="step1">
+                                <div class="step-icon">
+                                    <i class="bi bi-1-circle"></i>
+                                </div>
+                                <div class="step-content">
+                                    <strong>JWT Input</strong>
+                                    <div class="step-status text-muted">Ready</div>
+                                </div>
+                            </div>
+
+                            <div class="step-item" id="step2">
+                                <div class="step-icon">
+                                    <i class="bi bi-2-circle"></i>
+                                </div>
+                                <div class="step-content">
+                                    <strong>ZLIB Compression</strong>
+                                    <div class="step-status text-muted">Pending</div>
+                                </div>
+                            </div>
+
+                            <div class="step-item" id="step3">
+                                <div class="step-icon">
+                                    <i class="bi bi-3-circle"></i>
+                                </div>
+                                <div class="step-content">
+                                    <strong>Base45 Encoding</strong>
+                                    <div class="step-status text-muted">Pending</div>
+                                </div>
+                            </div>
+
+                            <div class="step-item" id="step4">
+                                <div class="step-icon">
+                                    <i class="bi bi-4-circle"></i>
+                                </div>
+                                <div class="step-content">
+                                    <strong>QR Code Generation</strong>
+                                    <div class="step-status text-muted">Pending</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <% if (typeof prcSession !== 'undefined' && prcSession.jwt) { %>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-primary" id="generateQR">
+                                        <span class="btn-text">
+                                            <i class="bi bi-play-circle me-2"></i>Generate QR Code
+                                        </span>
+                                        <span class="loading-spinner">
+                                            <i class="bi bi-arrow-clockwise spin me-2"></i>Processing...
+                                        </span>
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-secondary" id="testPipeline" disabled>
+                                        <i class="bi bi-arrow-repeat me-2"></i>Test Pipeline
+                                    </button>
+                                </div>
+                            <% } else { %>
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    JWT required to proceed with QR generation.
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code Results -->
+        <div id="qrResults" class="mt-4 d-none">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-check-circle me-2"></i>
+                    QR Code Generated Successfully
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="qr-display">
+                                <div id="qrCodeContainer">
+                                    <!-- QR code image will be inserted here -->
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="downloadQR">
+                                        <i class="bi bi-download me-1"></i>Download PNG
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="copyBase45">
+                                        <i class="bi bi-clipboard me-1"></i>Copy Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>QR Code Statistics:</h6>
+                                    <dl class="row small">
+                                        <dt class="col-6">Version:</dt>
+                                        <dd class="col-6" id="qrVersion">-</dd>
+
+                                        <dt class="col-6">Size:</dt>
+                                        <dd class="col-6" id="qrSize">-</dd>
+
+                                        <dt class="col-6">Data Length:</dt>
+                                        <dd class="col-6" id="qrDataLength">-</dd>
+
+                                        <dt class="col-6">Error Correction:</dt>
+                                        <dd class="col-6" id="qrErrorCorrection">L (Low)</dd>
+
+                                        <dt class="col-6">Format:</dt>
+                                        <dd class="col-6">PNG Image</dd>
+                                    </dl>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h6>Compression Statistics:</h6>
+                                    <dl class="row small">
+                                        <dt class="col-6">Original JWT:</dt>
+                                        <dd class="col-6" id="originalSize">-</dd>
+
+                                        <dt class="col-6">Compressed:</dt>
+                                        <dd class="col-6" id="compressedSize">-</dd>
+
+                                        <dt class="col-6">Base45 Encoded:</dt>
+                                        <dd class="col-6" id="encodedSize">-</dd>
+
+                                        <dt class="col-6">Compression Ratio:</dt>
+                                        <dd class="col-6" id="compressionRatio">-</dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label class="form-label">Base45 Encoded Data:</label>
+                                <textarea class="form-control font-monospace" id="base45Data" rows="4" readonly
+                                          style="font-size: 0.75rem;"></textarea>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-success" id="proceedToPDF">
+                                        <i class="bi bi-file-earmark-pdf me-2"></i>Proceed to PDF Generation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline Progress -->
+        <div id="pipelineProgress" class="mt-4 d-none">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-activity me-2"></i>
+                    Processing Pipeline
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div id="pipelineLog" class="font-monospace small" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+}
+
+.step-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.step-item.completed {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.step-item.processing {
+    background-color: var(--warning-color);
+    color: black;
+}
+
+.step-icon {
+    font-size: 1.25rem;
+    min-width: 24px;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-status {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.qr-display img {
+    max-width: 100%;
+    height: auto;
+    border: 2px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+@media (max-width: 768px) {
+    .pipeline-steps {
+        gap: 0.5rem;
+    }
+
+    .step-item {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .qr-display {
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+// Phase 3 specific validation
+window.validatePhase3 = function() {
+    const base45Data = document.getElementById('base45Data').value;
+    return !!base45Data;
+};
+
+let qrGenerationState = {
+    base45Data: '',
+    qrCodeImage: null,
+    stats: {}
+};
+
+// Analyze JWT
+document.getElementById('analyzeJWT')?.addEventListener('click', function() {
+    const jwt = '<%= typeof prcSession !== "undefined" ? prcSession.jwt || "" : "" %>';
+
+    if (!jwt) return;
+
+    try {
+        // Decode JWT header
+        const parts = jwt.split('.');
+        if (parts.length === 3) {
+            const header = JSON.parse(atob(parts[0]));
+            const payload = JSON.parse(atob(parts[1]));
+
+            document.getElementById('jwtAlgorithm').textContent = header.alg || '-';
+            document.getElementById('jwtKid').textContent = header.kid || '-';
+
+            alert('JWT Analysis:\n\n' +
+                  'Header: ' + JSON.stringify(header, null, 2) + '\n\n' +
+                  'Payload: ' + JSON.stringify(payload, null, 2));
+        }
+    } catch (error) {
+        alert('Error analyzing JWT: ' + error.message);
+    }
+});
+
+// Update step status
+function updateStepStatus(stepNumber, status, message = '') {
+    const step = document.getElementById(`step${stepNumber}`);
+    if (!step) return;
+
+    step.className = 'step-item ' + status;
+    const statusEl = step.querySelector('.step-status');
+
+    switch (status) {
+        case 'active':
+            statusEl.textContent = 'Processing...';
+            break;
+        case 'completed':
+            statusEl.textContent = 'Complete';
+            break;
+        case 'processing':
+            statusEl.textContent = message || 'Processing...';
+            break;
+        default:
+            statusEl.textContent = message || 'Pending';
+    }
+}
+
+// Log pipeline step
+function logPipelineStep(message) {
+    const log = document.getElementById('pipelineLog');
+    if (log) {
+        const timestamp = new Date().toLocaleTimeString();
+        log.innerHTML += `[${timestamp}] ${message}\n`;
+        log.scrollTop = log.scrollHeight;
+    }
+}
+
+// Update progress bar
+function updateProgress(percentage, step) {
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = percentage + '%';
+        progressBar.textContent = `Step ${step}/4: ${percentage}%`;
+    }
+}
+
+// Generate QR Code
+document.getElementById('generateQR')?.addEventListener('click', function() {
+    const jwt = '<%= typeof prcSession !== "undefined" ? prcSession.jwt || "" : "" %>';
+
+    if (!jwt) {
+        alert('No JWT available. Please complete Phase 2 first.');
+        return;
+    }
+
+    setLoading(this, true);
+    document.getElementById('pipelineProgress').classList.remove('d-none');
+    document.getElementById('pipelineLog').innerHTML = '';
+
+    // Reset steps
+    for (let i = 1; i <= 4; i++) {
+        updateStepStatus(i, '', 'Pending');
+    }
+
+    // Step 1: JWT Input
+    updateStepStatus(1, 'active');
+    updateProgress(25, 1);
+    logPipelineStep('Starting QR code generation pipeline...');
+    logPipelineStep(`JWT input: ${jwt.length} characters`);
+
+    fetch('/prc/phase3/generate-qr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ jwt: jwt })
+    })
+    .then(response => response.json())
+    .then(result => {
+        setLoading(this, false);
+
+        if (result.success) {
+            // Update all steps as completed
+            updateStepStatus(1, 'completed');
+            updateStepStatus(2, 'completed');
+            updateStepStatus(3, 'completed');
+            updateStepStatus(4, 'completed');
+            updateProgress(100, 4);
+
+            logPipelineStep(`ZLIB compression: ${result.stats.compressedSize} bytes`);
+            logPipelineStep(`Base45 encoding: ${result.stats.encodedSize} characters`);
+            logPipelineStep(`QR code version: ${result.stats.qrVersion}`);
+            logPipelineStep('QR code generation completed successfully!');
+
+            // Display results
+            displayQRResults(result);
+
+            // Store state
+            qrGenerationState.base45Data = result.base45Data;
+            qrGenerationState.qrCodeImage = result.qrCodeDataUrl;
+            qrGenerationState.stats = result.stats;
+
+            // Enable test pipeline button
+            document.getElementById('testPipeline').disabled = false;
+
+            // Update next button
+            updateNextButton();
+        } else {
+            // Show error on appropriate step
+            const errorStep = result.errorStep || 4;
+            updateStepStatus(errorStep, 'error', 'Error');
+            logPipelineStep(`Error: ${result.error}`);
+
+            alert('QR code generation failed: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        setLoading(this, false);
+        updateStepStatus(4, 'error', 'Error');
+        logPipelineStep(`Network error: ${error.message}`);
+        console.error('QR generation error:', error);
+        alert('An error occurred while generating QR code. Please try again.');
+    });
+});
+
+// Display QR results
+function displayQRResults(result) {
+    const container = document.getElementById('qrCodeContainer');
+    const img = document.createElement('img');
+    img.src = result.qrCodeDataUrl;
+    img.alt = 'Generated QR Code';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    container.innerHTML = '';
+    container.appendChild(img);
+
+    // Update statistics
+    document.getElementById('qrVersion').textContent = result.stats.qrVersion;
+    document.getElementById('qrSize').textContent = result.stats.qrSize;
+    document.getElementById('qrDataLength').textContent = result.stats.encodedSize + ' chars';
+    document.getElementById('originalSize').textContent = result.stats.originalSize + ' chars';
+    document.getElementById('compressedSize').textContent = result.stats.compressedSize + ' bytes';
+    document.getElementById('encodedSize').textContent = result.stats.encodedSize + ' chars';
+    document.getElementById('compressionRatio').textContent = result.stats.compressionRatio;
+
+    // Show Base45 data
+    document.getElementById('base45Data').value = result.base45Data;
+
+    // Show results section
+    document.getElementById('qrResults').classList.remove('d-none');
+}
+
+// Test pipeline (decode QR back to JWT)
+document.getElementById('testPipeline').addEventListener('click', function() {
+    const base45Data = qrGenerationState.base45Data;
+
+    if (!base45Data) {
+        alert('No QR data to test. Please generate QR code first.');
+        return;
+    }
+
+    setLoading(this, true);
+
+    fetch('/prc/phase3/test-pipeline', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ base45Data: base45Data })
+    })
+    .then(response => response.json())
+    .then(result => {
+        setLoading(this, false);
+
+        if (result.success) {
+            alert('Pipeline test successful!\n\n' +
+                  'Round-trip verification: ' + (result.verified ? 'PASSED' : 'FAILED') + '\n' +
+                  'Original JWT length: ' + result.originalLength + '\n' +
+                  'Decoded JWT length: ' + result.decodedLength + '\n' +
+                  'Data integrity: ' + (result.dataIntact ? 'INTACT' : 'COMPROMISED'));
+        } else {
+            alert('Pipeline test failed: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        setLoading(this, false);
+        console.error('Pipeline test error:', error);
+        alert('An error occurred during pipeline test. Please try again.');
+    });
+});
+
+// Download QR code
+document.getElementById('downloadQR')?.addEventListener('click', function() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = document.querySelector('#qrCodeContainer img');
+
+    if (!img) return;
+
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+
+    const link = document.createElement('a');
+    link.download = `PRC_QR_Code_${new Date().toISOString().split('T')[0]}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+});
+
+// Copy Base45 data
+document.getElementById('copyBase45')?.addEventListener('click', function() {
+    const base45Text = document.getElementById('base45Data');
+    if (base45Text) {
+        base45Text.select();
+        document.execCommand('copy');
+
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        setTimeout(() => {
+            this.innerHTML = originalText;
+        }, 1000);
+    }
+});
+
+// Proceed to PDF generation
+document.getElementById('proceedToPDF')?.addEventListener('click', function() {
+    const base45Data = qrGenerationState.base45Data;
+
+    if (!base45Data) {
+        alert('Please generate QR code first.');
+        return;
+    }
+
+    // Save QR data to session and proceed
+    fetch('/prc/phase3/save-qr', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            base45Data: base45Data,
+            qrCodeImage: qrGenerationState.qrCodeImage,
+            stats: qrGenerationState.stats
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.location.href = '/prc/generate?phase=4';
+        } else {
+            alert('Failed to save QR data: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Save QR error:', error);
+        alert('An error occurred while saving QR data. Please try again.');
+    });
+});
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // If QR code already exists, show it
+    <% if (typeof prcSession !== 'undefined' && prcSession.qrCode) { %>
+        const existingQRData = {
+            base45Data: '<%= prcSession.qrCode.base45Data || "" %>',
+            qrCodeDataUrl: '<%= prcSession.qrCode.qrCodeImage || "" %>',
+            stats: <%= JSON.stringify(prcSession.qrCode.stats || {}) %>
+        };
+
+        if (existingQRData.base45Data && existingQRData.qrCodeDataUrl) {
+            displayQRResults(existingQRData);
+            qrGenerationState = existingQRData;
+            document.getElementById('testPipeline').disabled = false;
+
+            // Mark all steps as completed
+            for (let i = 1; i <= 4; i++) {
+                updateStepStatus(i, 'completed');
+            }
+        }
+    <% } %>
+
+    updateNextButton();
+});
+</script>

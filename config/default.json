@@ -1,0 +1,66 @@
+{
+  "application": {
+    "name": "PRC QR Generator",
+    "version": "1.0.0",
+    "description": "Multi-phase eEHIC compliant PRC document generation system",
+    "author": "Daniel S .A. Khan"
+  },
+  "server": {
+    "port": 3000,
+    "host": "localhost"
+  },
+  "database": {
+    "name": "prcgen",
+    "defaultHost": "192.168.129.197",
+    "defaultPort": 27017
+  },
+  "jwt": {
+    "algorithm": "RS256",
+    "keySize": 2048,
+    "schema": {
+      "id": "eessi:prc:1.0",
+      "url": "https://api-pilot.ebsi.eu/trusted-schemas-registry/v3/schemas/z5fqhFPcuBeYZHnUbibhmtxDdoPhv4husBnvX4g5g8CeG"
+    }
+  },
+  "qrcode": {
+    "errorCorrectionLevel": "L",
+    "type": "png",
+    "margin": 4,
+    "color": {
+      "dark": "#000000",
+      "light": "#FFFFFF"
+    }
+  },
+  "pdf": {
+    "format": "A4",
+    "margin": {
+      "top": 50,
+      "bottom": 50,
+      "left": 50,
+      "right": 50
+    },
+    "qrCodeSize": {
+      "width": 170,
+      "height": 170,
+      "minArea": "6cm²"
+    }
+  },
+  "email": {
+    "defaultSubject": "Your PRC Document",
+    "defaultFromName": "PRC Generator System"
+  },
+  "security": {
+    "sessionSecret": "change-this-in-production",
+    "passwordMinLength": 8,
+    "maxLoginAttempts": 5,
+    "lockoutTime": 300000
+  },
+  "logging": {
+    "level": "debug",
+    "console": true,
+    "files": true,
+    "path": "./logs",
+    "maxFiles": "14d",
+    "maxSize": "20m"
+  }
+}

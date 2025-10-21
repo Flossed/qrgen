@@ -1,0 +1,321 @@
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <a href="/prc/dashboard" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        PRC Document
+                    </h3>
+                    <small class="text-muted">
+                        <%= prc.holderFullName %> • <%= prc.officialId %>
+                    </small>
+                </div>
+            </div>
+            <div>
+                <% if (prc.status === 'sent') { %>
+                    <span class="badge bg-success fs-6">
+                        <i class="bi bi-check-circle me-1"></i>Sent
+                    </span>
+                <% } else if (prc.status === 'generated') { %>
+                    <span class="badge bg-primary fs-6">
+                        <i class="bi bi-file-check me-1"></i>Generated
+                    </span>
+                <% } else if (prc.status === 'revoked') { %>
+                    <span class="badge bg-danger fs-6">
+                        <i class="bi bi-x-circle me-1"></i>Revoked
+                    </span>
+                <% } else { %>
+                    <span class="badge bg-secondary fs-6">
+                        <i class="bi bi-clock me-1"></i>Draft
+                    </span>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Document Content -->
+        <div class="row">
+            <!-- PRC Information -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>
+                        PRC Information
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">Token ID:</dt>
+                            <dd class="col-sm-9">
+                                <code class="small"><%= prc.jti %></code>
+                            </dd>
+
+                            <dt class="col-sm-3">Schema:</dt>
+                            <dd class="col-sm-9"><%= prc.sid %></dd>
+
+                            <dt class="col-sm-3">Issuing Country:</dt>
+                            <dd class="col-sm-9"><%= prc.prcData.ic %></dd>
+
+                            <dt class="col-sm-3">Card Holder:</dt>
+                            <dd class="col-sm-9"><%= prc.holderFullName %></dd>
+
+                            <dt class="col-sm-3">Date of Birth:</dt>
+                            <dd class="col-sm-9"><%= prc.prcData.dob %></dd>
+
+                            <dt class="col-sm-3">Personal ID:</dt>
+                            <dd class="col-sm-9"><%= prc.prcData.hi %></dd>
+
+                            <dt class="col-sm-3">Institution:</dt>
+                            <dd class="col-sm-9">
+                                <%= prc.prcData.in %> (<%= prc.prcData.ii %>)
+                            </dd>
+
+                            <% if (prc.prcData.ci) { %>
+                                <dt class="col-sm-3">Card ID:</dt>
+                                <dd class="col-sm-9"><%= prc.prcData.ci %></dd>
+                            <% } %>
+
+                            <dt class="col-sm-3">Validity Period:</dt>
+                            <dd class="col-sm-9">
+                                <%= new Date(prc.prcData.sd).toLocaleDateString() %> -
+                                <%= new Date(prc.prcData.ed).toLocaleDateString() %>
+                            </dd>
+
+                            <dt class="col-sm-3">Issue Date:</dt>
+                            <dd class="col-sm-9">
+                                <%= new Date(prc.prcData.di).toLocaleDateString() %>
+                            </dd>
+
+                            <% if (prc.prcData.xd) { %>
+                                <dt class="col-sm-3">Expiry Date:</dt>
+                                <dd class="col-sm-9">
+                                    <%= new Date(prc.prcData.xd).toLocaleDateString() %>
+                                </dd>
+                            <% } %>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- QR Code Data -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="bi bi-qr-code me-2"></i>
+                        QR Code Data
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="text-center">
+                                    <% if (prc.qrCodeImage) { %>
+                                        <img src="data:image/png;base64,<%= prc.qrCodeImage.toString('base64') %>"
+                                             alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                                    <% } else { %>
+                                        <div class="bg-light p-4 rounded">
+                                            <i class="bi bi-qr-code" style="font-size: 3rem; opacity: 0.3;"></i>
+                                            <p class="text-muted mt-2 mb-0">QR Code not available</p>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Base45 Data:</h6>
+                                <textarea class="form-control font-monospace" rows="8" readonly
+                                          style="font-size: 0.75rem;"><%= prc.qrCodeData %></textarea>
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="copyToClipboard('<%= prc.qrCodeData %>')">
+                                        <i class="bi bi-clipboard me-1"></i>Copy
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions & Status -->
+            <div class="col-md-4">
+                <!-- Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-gear me-2"></i>
+                        Actions
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <% if (prc.pdfBuffer) { %>
+                                <a href="/prc/<%= prc._id %>/download" class="btn btn-primary">
+                                    <i class="bi bi-download me-2"></i>Download PDF
+                                </a>
+                            <% } %>
+
+                            <% if (!prc.emailSent && prc.status !== 'revoked') { %>
+                                <button class="btn btn-success" onclick="sendEmail()">
+                                    <i class="bi bi-envelope me-2"></i>Send via Email
+                                </button>
+                            <% } %>
+
+                            <% if (prc.qrCodeImage) { %>
+                                <button class="btn btn-outline-info" onclick="downloadQR()">
+                                    <i class="bi bi-qr-code me-2"></i>Download QR Code
+                                </button>
+                            <% } %>
+
+                            <% if (user.role === 'admin' && prc.status !== 'revoked') { %>
+                                <hr>
+                                <button class="btn btn-outline-danger" onclick="revokePRC()">
+                                    <i class="bi bi-x-circle me-2"></i>Revoke PRC
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Information -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Status
+                    </div>
+                    <div class="card-body">
+                        <dl class="row small">
+                            <dt class="col-6">Status:</dt>
+                            <dd class="col-6">
+                                <span class="badge bg-<%= prc.status === 'sent' ? 'success' : prc.status === 'generated' ? 'primary' : prc.status === 'revoked' ? 'danger' : 'secondary' %>">
+                                    <%= prc.status.charAt(0).toUpperCase() + prc.status.slice(1) %>
+                                </span>
+                            </dd>
+
+                            <dt class="col-6">Valid:</dt>
+                            <dd class="col-6">
+                                <% if (prc.isValid) { %>
+                                    <span class="text-success">Yes</span>
+                                <% } else { %>
+                                    <span class="text-danger">No</span>
+                                <% } %>
+                            </dd>
+
+                            <dt class="col-6">Generated:</dt>
+                            <dd class="col-6"><%= new Date(prc.generatedAt).toLocaleDateString() %></dd>
+
+                            <% if (prc.emailSent) { %>
+                                <dt class="col-6">Email Sent:</dt>
+                                <dd class="col-6">
+                                    <%= new Date(prc.emailSentAt).toLocaleDateString() %>
+                                </dd>
+
+                                <dt class="col-6">Recipient:</dt>
+                                <dd class="col-6"><%= prc.emailRecipient %></dd>
+                            <% } %>
+
+                            <% if (prc.isRevoked) { %>
+                                <dt class="col-6">Revoked:</dt>
+                                <dd class="col-6">
+                                    <%= new Date(prc.revokedAt).toLocaleDateString() %>
+                                </dd>
+
+                                <% if (prc.revocationReason) { %>
+                                    <dt class="col-6">Reason:</dt>
+                                    <dd class="col-6"><%= prc.revocationReason %></dd>
+                                <% } %>
+                            <% } %>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Certificate Info -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Certificate Used
+                    </div>
+                    <div class="card-body">
+                        <% if (prc.certificateId) { %>
+                            <p class="small mb-2">
+                                <strong>Certificate:</strong> <%= prc.certificateId.name || 'Unknown' %>
+                            </p>
+                            <p class="small mb-2">
+                                <strong>Algorithm:</strong> <%= prc.certificateId.algorithm || 'Unknown' %>
+                            </p>
+                            <a href="/certificates/<%= prc.certificateId._id %>" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>View Certificate
+                            </a>
+                        <% } else { %>
+                            <p class="text-muted small">Certificate information not available</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Copied to clipboard!');
+    }).catch(function(err) {
+        alert('Failed to copy to clipboard');
+    });
+}
+
+function downloadQR() {
+    const link = document.createElement('a');
+    link.href = '/prc/<%= prc._id %>/qr-download';
+    link.download = 'PRC_QR_<%= prc.jti %>.png';
+    link.click();
+}
+
+function sendEmail() {
+    const email = prompt('Enter recipient email address:');
+    if (email) {
+        fetch('/prc/<%= prc._id %>/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Email sent successfully!');
+                window.location.reload();
+            } else {
+                alert('Failed to send email: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error sending email: ' + error.message);
+        });
+    }
+}
+
+function revokePRC() {
+    const reason = prompt('Enter revocation reason (optional):') || 'No reason provided';
+    if (confirm('Are you sure you want to revoke this PRC? This action cannot be undone.')) {
+        fetch('/prc/<%= prc._id %>/revoke', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('PRC revoked successfully');
+                window.location.reload();
+            } else {
+                alert('Failed to revoke PRC: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            alert('Error revoking PRC: ' + error.message);
+        });
+    }
+}
+</script>

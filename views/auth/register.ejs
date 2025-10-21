@@ -1,0 +1,289 @@
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="bi bi-person-plus me-2"></i>
+                Register for PRC Generator
+            </div>
+            <div class="card-body p-4">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <form id="registerForm" action="/auth/register" method="POST">
+                    <div class="row">
+                        <!-- Personal Information -->
+                        <div class="col-12">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-person me-2"></i>Personal Information
+                            </h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="username" name="username"
+                                       placeholder="Username" required minlength="3" maxlength="50"
+                                       pattern="^[a-zA-Z0-9_]+$"
+                                       value="<%= typeof formData !== 'undefined' ? formData.username || '' : '' %>">
+                                <label for="username">Username</label>
+                                <div class="form-text">
+                                    <small>3-50 characters, letters, numbers, and underscores only</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="email" name="email"
+                                       placeholder="Email" required
+                                       value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>">
+                                <label for="email">Email Address</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="firstName" name="firstName"
+                                       placeholder="First Name" required maxlength="50"
+                                       value="<%= typeof formData !== 'undefined' ? formData.firstName || '' : '' %>">
+                                <label for="firstName">First Name</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="lastName" name="lastName"
+                                       placeholder="Last Name" required maxlength="50"
+                                       value="<%= typeof formData !== 'undefined' ? formData.lastName || '' : '' %>">
+                                <label for="lastName">Last Name</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="organization" name="organization"
+                                       placeholder="Organization" maxlength="100"
+                                       value="<%= typeof formData !== 'undefined' ? formData.organization || '' : '' %>">
+                                <label for="organization">Organization (Optional)</label>
+                            </div>
+                        </div>
+
+                        <!-- Account Role -->
+                        <div class="col-12">
+                            <h6 class="text-muted mb-3 mt-2">
+                                <i class="bi bi-shield-check me-2"></i>Account Type
+                            </h6>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="">Select account type</option>
+                                    <option value="user" <%= typeof formData !== 'undefined' && formData.role === 'user' ? 'selected' : '' %>>
+                                        User - Basic access to view PRC documents
+                                    </option>
+                                    <option value="issuer" <%= typeof formData !== 'undefined' && formData.role === 'issuer' ? 'selected' : '' %>>
+                                        Issuer - Generate and sign PRC documents
+                                    </option>
+                                </select>
+                                <label for="role">Account Role</label>
+                            </div>
+                        </div>
+
+                        <!-- Institution Information (for issuers) -->
+                        <div id="institutionFields" class="row" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3 mt-2">
+                                    <i class="bi bi-building me-2"></i>Institution Information
+                                </h6>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="institutionId" name="institutionId"
+                                           placeholder="Institution ID" minlength="4" maxlength="10"
+                                           pattern="^\d+$"
+                                           value="<%= typeof formData !== 'undefined' ? formData.institutionId || '' : '' %>">
+                                    <label for="institutionId">Institution ID</label>
+                                    <div class="form-text">
+                                        <small>4-10 digits only</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="country" name="country">
+                                        <option value="">Select country</option>
+                                        <option value="AT" <%= typeof formData !== 'undefined' && formData.country === 'AT' ? 'selected' : '' %>>Austria</option>
+                                        <option value="BE" <%= typeof formData !== 'undefined' && formData.country === 'BE' ? 'selected' : '' %>>Belgium</option>
+                                        <option value="BG" <%= typeof formData !== 'undefined' && formData.country === 'BG' ? 'selected' : '' %>>Bulgaria</option>
+                                        <option value="HR" <%= typeof formData !== 'undefined' && formData.country === 'HR' ? 'selected' : '' %>>Croatia</option>
+                                        <option value="CY" <%= typeof formData !== 'undefined' && formData.country === 'CY' ? 'selected' : '' %>>Cyprus</option>
+                                        <option value="CZ" <%= typeof formData !== 'undefined' && formData.country === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
+                                        <option value="DK" <%= typeof formData !== 'undefined' && formData.country === 'DK' ? 'selected' : '' %>>Denmark</option>
+                                        <option value="EE" <%= typeof formData !== 'undefined' && formData.country === 'EE' ? 'selected' : '' %>>Estonia</option>
+                                        <option value="FI" <%= typeof formData !== 'undefined' && formData.country === 'FI' ? 'selected' : '' %>>Finland</option>
+                                        <option value="FR" <%= typeof formData !== 'undefined' && formData.country === 'FR' ? 'selected' : '' %>>France</option>
+                                        <option value="DE" <%= typeof formData !== 'undefined' && formData.country === 'DE' ? 'selected' : '' %>>Germany</option>
+                                        <option value="GR" <%= typeof formData !== 'undefined' && formData.country === 'GR' ? 'selected' : '' %>>Greece</option>
+                                        <option value="HU" <%= typeof formData !== 'undefined' && formData.country === 'HU' ? 'selected' : '' %>>Hungary</option>
+                                        <option value="IE" <%= typeof formData !== 'undefined' && formData.country === 'IE' ? 'selected' : '' %>>Ireland</option>
+                                        <option value="IT" <%= typeof formData !== 'undefined' && formData.country === 'IT' ? 'selected' : '' %>>Italy</option>
+                                        <option value="LV" <%= typeof formData !== 'undefined' && formData.country === 'LV' ? 'selected' : '' %>>Latvia</option>
+                                        <option value="LT" <%= typeof formData !== 'undefined' && formData.country === 'LT' ? 'selected' : '' %>>Lithuania</option>
+                                        <option value="LU" <%= typeof formData !== 'undefined' && formData.country === 'LU' ? 'selected' : '' %>>Luxembourg</option>
+                                        <option value="MT" <%= typeof formData !== 'undefined' && formData.country === 'MT' ? 'selected' : '' %>>Malta</option>
+                                        <option value="NL" <%= typeof formData !== 'undefined' && formData.country === 'NL' ? 'selected' : '' %>>Netherlands</option>
+                                        <option value="PL" <%= typeof formData !== 'undefined' && formData.country === 'PL' ? 'selected' : '' %>>Poland</option>
+                                        <option value="PT" <%= typeof formData !== 'undefined' && formData.country === 'PT' ? 'selected' : '' %>>Portugal</option>
+                                        <option value="RO" <%= typeof formData !== 'undefined' && formData.country === 'RO' ? 'selected' : '' %>>Romania</option>
+                                        <option value="SK" <%= typeof formData !== 'undefined' && formData.country === 'SK' ? 'selected' : '' %>>Slovakia</option>
+                                        <option value="SI" <%= typeof formData !== 'undefined' && formData.country === 'SI' ? 'selected' : '' %>>Slovenia</option>
+                                        <option value="ES" <%= typeof formData !== 'undefined' && formData.country === 'ES' ? 'selected' : '' %>>Spain</option>
+                                        <option value="SE" <%= typeof formData !== 'undefined' && formData.country === 'SE' ? 'selected' : '' %>>Sweden</option>
+                                        <option value="IS" <%= typeof formData !== 'undefined' && formData.country === 'IS' ? 'selected' : '' %>>Iceland</option>
+                                        <option value="LI" <%= typeof formData !== 'undefined' && formData.country === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
+                                        <option value="NO" <%= typeof formData !== 'undefined' && formData.country === 'NO' ? 'selected' : '' %>>Norway</option>
+                                        <option value="CH" <%= typeof formData !== 'undefined' && formData.country === 'CH' ? 'selected' : '' %>>Switzerland</option>
+                                        <option value="UK" <%= typeof formData !== 'undefined' && formData.country === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                                    </select>
+                                    <label for="country">Country</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-12">
+                            <h6 class="text-muted mb-3 mt-2">
+                                <i class="bi bi-lock me-2"></i>Security
+                            </h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="password" name="password"
+                                       placeholder="Password" required minlength="8">
+                                <label for="password">Password</label>
+                            </div>
+                            <div class="form-text mb-3">
+                                <small class="text-muted">
+                                    Minimum 8 characters with uppercase, lowercase, number, and special character
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                                       placeholder="Confirm password" required>
+                                <label for="confirmPassword">Confirm Password</label>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="col-12">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the <a href="/terms" target="_blank" class="text-decoration-none">Terms of Service</a>
+                                    and <a href="/privacy" target="_blank" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary w-100 mb-3">
+                                <span class="btn-text">
+                                    <i class="bi bi-person-plus me-2"></i>Create Account
+                                </span>
+                                <span class="loading-spinner">
+                                    <i class="bi bi-arrow-clockwise spin me-2"></i>Creating account...
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center bg-light">
+                <small class="text-muted">
+                    Already have an account?
+                    <a href="/auth/login" class="text-decoration-none">Login here</a>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide institution fields based on role selection
+document.getElementById('role').addEventListener('change', function() {
+    const institutionFields = document.getElementById('institutionFields');
+    const institutionInputs = institutionFields.querySelectorAll('input, select');
+
+    if (this.value === 'issuer') {
+        institutionFields.style.display = 'flex';
+        institutionInputs.forEach(input => {
+            input.required = true;
+        });
+    } else {
+        institutionFields.style.display = 'none';
+        institutionInputs.forEach(input => {
+            input.required = false;
+        });
+    }
+});
+
+// Password confirmation validation
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Password strength validation
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strength = {
+        hasLower: /[a-z]/.test(password),
+        hasUpper: /[A-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+        hasLength: password.length >= 8
+    };
+
+    const isStrong = Object.values(strength).every(check => check);
+
+    if (!isStrong && password.length > 0) {
+        this.setCustomValidity('Password must contain uppercase, lowercase, number, and special character');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Form submission
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+
+    // Reset loading state after 5 seconds as fallback
+    setTimeout(() => setLoading(submitBtn, false), 5000);
+});
+
+// Initialize role-based fields visibility
+document.getElementById('role').dispatchEvent(new Event('change'));
+</script>

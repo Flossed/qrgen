@@ -1,0 +1,135 @@
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Login to PRC Generator
+            </div>
+            <div class="card-body p-4">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <form id="loginForm" action="/auth/login" method="POST">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="login" name="login"
+                               placeholder="Enter your username or email" required
+                               value="<%= typeof login !== 'undefined' ? login || '' : '' %>">
+                        <label for="login">
+                            <i class="bi bi-person me-2"></i>Username or Email
+                        </label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="password" name="password"
+                               placeholder="Enter your password" required>
+                        <label for="password">
+                            <i class="bi bi-lock me-2"></i>Password
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="rememberMe" name="rememberMe">
+                        <label class="form-check-label" for="rememberMe">
+                            Remember me for 30 days
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <span class="btn-text">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </span>
+                        <span class="loading-spinner">
+                            <i class="bi bi-arrow-clockwise spin me-2"></i>Logging in...
+                        </span>
+                    </button>
+
+                    <div class="text-center">
+                        <a href="/auth/forgot-password" class="text-decoration-none">
+                            <small>Forgot your password?</small>
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center bg-light">
+                <small class="text-muted">
+                    Don't have an account?
+                    <a href="/auth/register" class="text-decoration-none">Register here</a>
+                </small>
+            </div>
+        </div>
+
+        <!-- Information Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2 text-info"></i>
+                    About PRC Generator
+                </h6>
+                <p class="card-text small text-muted mb-0">
+                    Generate eEHIC compliant Provisional Replacement Certificates with secure
+                    QR codes following Decision S2 technical specifications. Designed for
+                    European healthcare institutions and authorized personnel.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .card-footer {
+        border-top: 1px solid var(--border-color);
+    }
+
+    .form-floating > .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    }
+
+    .form-floating > label {
+        padding-left: 1rem;
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem !important;
+        }
+    }
+</style>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+
+    // Reset loading state after 5 seconds as fallback
+    setTimeout(() => setLoading(submitBtn, false), 5000);
+});
+
+// Clear any existing errors when user starts typing
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+        const feedback = this.parentNode.querySelector('.invalid-feedback');
+        if (feedback) feedback.remove();
+    });
+});
+</script>

@@ -1,0 +1,138 @@
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white text-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Error <%= error.status || 500 %>
+            </div>
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <% if (error.status === 404) { %>
+                        <i class="bi bi-file-earmark-x text-danger" style="font-size: 4rem;"></i>
+                    <% } else if (error.status === 403) { %>
+                        <i class="bi bi-shield-x text-warning" style="font-size: 4rem;"></i>
+                    <% } else if (error.status === 401) { %>
+                        <i class="bi bi-lock text-warning" style="font-size: 4rem;"></i>
+                    <% } else { %>
+                        <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                    <% } %>
+                </div>
+
+                <h1 class="display-6 mb-3">
+                    <% if (error.status === 404) { %>
+                        Page Not Found
+                    <% } else if (error.status === 403) { %>
+                        Access Forbidden
+                    <% } else if (error.status === 401) { %>
+                        Authentication Required
+                    <% } else { %>
+                        Something Went Wrong
+                    <% } %>
+                </h1>
+
+                <p class="text-muted mb-4">
+                    <% if (error.status === 404) { %>
+                        The page you're looking for doesn't exist or has been moved.
+                    <% } else if (error.status === 403) { %>
+                        You don't have permission to access this resource.
+                    <% } else if (error.status === 401) { %>
+                        Please log in to access this page.
+                    <% } else { %>
+                        <%= error.message || 'An unexpected error occurred while processing your request.' %>
+                    <% } %>
+                </p>
+
+                <div class="d-grid gap-2 d-md-block">
+                    <% if (error.status === 401) { %>
+                        <a href="/auth/login" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                        </a>
+                    <% } %>
+
+                    <% if (typeof user !== 'undefined' && user) { %>
+                        <a href="/prc/dashboard" class="btn btn-success">
+                            <i class="bi bi-house me-2"></i>Dashboard
+                        </a>
+                    <% } else { %>
+                        <a href="/" class="btn btn-success">
+                            <i class="bi bi-house me-2"></i>Home
+                        </a>
+                    <% } %>
+
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Go Back
+                    </button>
+                </div>
+            </div>
+
+            <% if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && error.stack) { %>
+                <div class="card-footer">
+                    <div class="accordion" id="errorDetails">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="stackTraceHeader">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#stackTrace">
+                                    <i class="bi bi-bug me-2"></i>
+                                    Development Error Details
+                                </button>
+                            </h2>
+                            <div id="stackTrace" class="accordion-collapse collapse" data-bs-parent="#errorDetails">
+                                <div class="accordion-body">
+                                    <h6>Error Message:</h6>
+                                    <code class="d-block mb-3 p-2 bg-light"><%= error.message %></code>
+
+                                    <h6>Stack Trace:</h6>
+                                    <pre class="bg-light p-3 small" style="max-height: 300px; overflow-y: auto;"><%= error.stack %></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-question-circle me-2 text-info"></i>
+                    Need Help?
+                </h6>
+                <p class="card-text small mb-3">
+                    If you continue to experience issues, please try the following:
+                </p>
+                <ul class="list-unstyled small">
+                    <li><i class="bi bi-check2 text-success me-2"></i>Clear your browser cache and cookies</li>
+                    <li><i class="bi bi-check2 text-success me-2"></i>Ensure you have the necessary permissions</li>
+                    <li><i class="bi bi-check2 text-success me-2"></i>Check if you're using the correct URL</li>
+                    <li><i class="bi bi-check2 text-success me-2"></i>Contact your system administrator if the problem persists</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .display-6 {
+        font-weight: 600;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+
+    pre {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 2rem 1rem;
+        }
+
+        .display-6 {
+            font-size: 1.5rem;
+        }
+    }
+</style>

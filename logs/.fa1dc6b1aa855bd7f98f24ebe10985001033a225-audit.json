@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\.fa1dc6b1aa855bd7f98f24ebe10985001033a225-audit.json",
+    "files": [
+        {
+            "date": 1760956132710,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\PDFService-2025-10-20.log",
+            "hash": "54287da57de34df14b2a966f4b5e1c1e9f3db39513c4ec51f73cf075c30d1222"
+        },
+        {
+            "date": 1761029115258,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\PDFService-2025-10-21.log",
+            "hash": "2a8b5a380db44b48516be01bcfdfb1147d7dfdbc4247d6797460cf8c05a79054"
+        }
+    ],
+    "hashType": "sha256"
+}

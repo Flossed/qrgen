@@ -1,0 +1,439 @@
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-person-lines-fill me-2"></i>
+        Phase 1: Enter PRC Data
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-4">
+            Enter the card holder information and validity details according to eEHIC specifications.
+            All required fields must be completed to proceed to JWT generation.
+        </p>
+
+        <form id="prcDataForm" action="/prc/create" method="POST">
+            <div class="row">
+                <!-- Issuing Member State -->
+                <div class="col-12">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-flag me-2"></i>Issuing Member State
+                    </h6>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <select class="form-select" id="ic" name="ic" required>
+                            <option value="">Select issuing country</option>
+                            <option value="AT" <%= prcSession?.formData?.ic === 'AT' ? 'selected' : '' %>>Austria</option>
+                            <option value="BE" <%= prcSession?.formData?.ic === 'BE' ? 'selected' : '' %>>Belgium</option>
+                            <option value="BG" <%= prcSession?.formData?.ic === 'BG' ? 'selected' : '' %>>Bulgaria</option>
+                            <option value="HR" <%= prcSession?.formData?.ic === 'HR' ? 'selected' : '' %>>Croatia</option>
+                            <option value="CY" <%= prcSession?.formData?.ic === 'CY' ? 'selected' : '' %>>Cyprus</option>
+                            <option value="CZ" <%= prcSession?.formData?.ic === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
+                            <option value="DK" <%= prcSession?.formData?.ic === 'DK' ? 'selected' : '' %>>Denmark</option>
+                            <option value="EE" <%= prcSession?.formData?.ic === 'EE' ? 'selected' : '' %>>Estonia</option>
+                            <option value="FI" <%= prcSession?.formData?.ic === 'FI' ? 'selected' : '' %>>Finland</option>
+                            <option value="FR" <%= prcSession?.formData?.ic === 'FR' ? 'selected' : '' %>>France</option>
+                            <option value="DE" <%= prcSession?.formData?.ic === 'DE' ? 'selected' : '' %>>Germany</option>
+                            <option value="GR" <%= prcSession?.formData?.ic === 'GR' ? 'selected' : '' %>>Greece</option>
+                            <option value="HU" <%= prcSession?.formData?.ic === 'HU' ? 'selected' : '' %>>Hungary</option>
+                            <option value="IE" <%= prcSession?.formData?.ic === 'IE' ? 'selected' : '' %>>Ireland</option>
+                            <option value="IT" <%= prcSession?.formData?.ic === 'IT' ? 'selected' : '' %>>Italy</option>
+                            <option value="LV" <%= prcSession?.formData?.ic === 'LV' ? 'selected' : '' %>>Latvia</option>
+                            <option value="LT" <%= prcSession?.formData?.ic === 'LT' ? 'selected' : '' %>>Lithuania</option>
+                            <option value="LU" <%= prcSession?.formData?.ic === 'LU' ? 'selected' : '' %>>Luxembourg</option>
+                            <option value="MT" <%= prcSession?.formData?.ic === 'MT' ? 'selected' : '' %>>Malta</option>
+                            <option value="NL" <%= prcSession?.formData?.ic === 'NL' ? 'selected' : '' %>>Netherlands</option>
+                            <option value="PL" <%= prcSession?.formData?.ic === 'PL' ? 'selected' : '' %>>Poland</option>
+                            <option value="PT" <%= prcSession?.formData?.ic === 'PT' ? 'selected' : '' %>>Portugal</option>
+                            <option value="RO" <%= prcSession?.formData?.ic === 'RO' ? 'selected' : '' %>>Romania</option>
+                            <option value="SK" <%= prcSession?.formData?.ic === 'SK' ? 'selected' : '' %>>Slovakia</option>
+                            <option value="SI" <%= prcSession?.formData?.ic === 'SI' ? 'selected' : '' %>>Slovenia</option>
+                            <option value="ES" <%= prcSession?.formData?.ic === 'ES' ? 'selected' : '' %>>Spain</option>
+                            <option value="SE" <%= prcSession?.formData?.ic === 'SE' ? 'selected' : '' %>>Sweden</option>
+                            <option value="IS" <%= prcSession?.formData?.ic === 'IS' ? 'selected' : '' %>>Iceland</option>
+                            <option value="LI" <%= prcSession?.formData?.ic === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
+                            <option value="NO" <%= prcSession?.formData?.ic === 'NO' ? 'selected' : '' %>>Norway</option>
+                            <option value="CH" <%= prcSession?.formData?.ic === 'CH' ? 'selected' : '' %>>Switzerland</option>
+                            <option value="UK" <%= prcSession?.formData?.ic === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                        </select>
+                        <label for="ic">Issuing Country *</label>
+                    </div>
+                </div>
+
+                <!-- Card Holder Information -->
+                <div class="col-12 mt-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-person me-2"></i>Card Holder Information
+                    </h6>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="fn" name="fn"
+                               placeholder="Family name" required maxlength="40"
+                               value="<%= prcSession?.formData?.fn || '' %>">
+                        <label for="fn">Family Name *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="gn" name="gn"
+                               placeholder="Given name(s)" required maxlength="40"
+                               value="<%= prcSession?.formData?.gn || '' %>">
+                        <label for="gn">Given Name(s) *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="dob" name="dob"
+                               placeholder="Date of birth" required
+                               value="<%= prcSession?.formData?.dob || '' %>">
+                        <label for="dob">Date of Birth *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="hi" name="hi"
+                               placeholder="Personal identification number" required maxlength="20"
+                               value="<%= prcSession?.formData?.hi || '' %>">
+                        <label for="hi">Personal ID Number *</label>
+                    </div>
+                </div>
+
+                <!-- Institution Information -->
+                <div class="col-12 mt-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-building me-2"></i>Competent Institution
+                    </h6>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="in" name="in"
+                               placeholder="Institution name" required maxlength="25"
+                               value="<%= prcSession?.formData?.in || user?.institutionName || '' %>">
+                        <label for="in">Institution Name *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="ii" name="ii"
+                               placeholder="Institution ID" required maxlength="10"
+                               value="<%= prcSession?.formData?.ii || user?.institutionId || '' %>">
+                        <label for="ii">Institution ID *</label>
+                    </div>
+                </div>
+
+                <!-- Card Information (Optional) -->
+                <div class="col-12 mt-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-credit-card me-2"></i>Card Information (Optional)
+                    </h6>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="ci" name="ci"
+                               placeholder="Card identification number" maxlength="20"
+                               value="<%= prcSession?.formData?.ci || '' %>">
+                        <label for="ci">Card ID Number</label>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="xd" name="xd"
+                               placeholder="Card expiry date"
+                               value="<%= prcSession?.formData?.xd || '' %>">
+                        <label for="xd">Card Expiry Date</label>
+                    </div>
+                </div>
+
+                <!-- Validity Period -->
+                <div class="col-12 mt-3">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-calendar-range me-2"></i>Certificate Validity Period
+                    </h6>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="sd" name="sd"
+                               placeholder="Start date" required
+                               value="<%= prcSession?.formData?.sd || '' %>">
+                        <label for="sd">Start Date *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="ed" name="ed"
+                               placeholder="End date" required
+                               value="<%= prcSession?.formData?.ed || '' %>">
+                        <label for="ed">End Date *</label>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-floating mb-3">
+                        <input type="date" class="form-control" id="di" name="di"
+                               placeholder="Issue date" required
+                               value="<%= prcSession?.formData?.di || new Date().toISOString().split('T')[0] %>">
+                        <label for="di">Issue Date *</label>
+                    </div>
+                </div>
+
+                <!-- Validation Summary -->
+                <div class="col-12 mt-3">
+                    <div id="validationSummary" class="alert alert-info d-none">
+                        <h6><i class="bi bi-info-circle me-2"></i>Validation Summary</h6>
+                        <ul id="validationList" class="mb-0"></ul>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="col-12 mt-4">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-primary" onclick="validateForm()">
+                            <i class="bi bi-check-circle me-2"></i>Validate Data
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="saveAndContinue" disabled>
+                            <span class="btn-text">
+                                <i class="bi bi-save me-2"></i>Save & Continue
+                            </span>
+                            <span class="loading-spinner">
+                                <i class="bi bi-arrow-clockwise spin me-2"></i>Saving...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Phase 1 specific validation
+window.validatePhase1 = function() {
+    const requiredFields = ['ic', 'fn', 'gn', 'dob', 'hi', 'in', 'ii', 'sd', 'ed', 'di'];
+    let isValid = true;
+    const errors = [];
+
+    // Check required fields
+    requiredFields.forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        if (!field || !field.value.trim()) {
+            isValid = false;
+            errors.push(`${field?.labels[0]?.textContent || fieldName} is required`);
+        }
+    });
+
+    // Date validation - only if all dates are filled
+    const dobField = document.getElementById('dob');
+    const sdField = document.getElementById('sd');
+    const edField = document.getElementById('ed');
+    const diField = document.getElementById('di');
+    const xdField = document.getElementById('xd');
+
+    if (dobField.value && sdField.value && edField.value && diField.value) {
+        const dob = new Date(dobField.value);
+        const sd = new Date(sdField.value);
+        const ed = new Date(edField.value);
+        const di = new Date(diField.value);
+        const xd = xdField.value ? new Date(xdField.value) : null;
+
+        if (dob > sd) {
+            isValid = false;
+            errors.push('Date of birth must be before or equal to start date');
+        }
+
+        if (sd >= ed) {
+            isValid = false;
+            errors.push('Start date must be before end date');
+        }
+
+        if (di < sd) {
+            isValid = false;
+            errors.push('Issue date must be on or after start date');
+        }
+
+        if (di > ed) {
+            isValid = false;
+            errors.push('Issue date must be before or equal to end date');
+        }
+
+        if (xd && xd < ed) {
+            isValid = false;
+            errors.push('Card expiry date must be after or equal to end date');
+        }
+    }
+
+    // Institution name + ID length validation
+    const institutionName = document.getElementById('in')?.value.trim() || '';
+    const institutionId = document.getElementById('ii')?.value.trim() || '';
+    const combinedLength = institutionName.length + institutionId.length;
+
+    if (combinedLength > 25) {
+        isValid = false;
+        errors.push(`Combined institution name and ID length is ${combinedLength} characters (max 25)`);
+    }
+
+    // Update validation summary
+    updateValidationSummary(isValid, errors);
+
+    return isValid;
+};
+
+window.validateForm = function() {
+    const isValid = window.validatePhase1();
+    const saveButton = document.getElementById('saveAndContinue');
+    if (!saveButton) return isValid;
+
+    saveButton.disabled = !isValid;
+
+    if (isValid) {
+        saveButton.classList.remove('btn-outline-primary');
+        saveButton.classList.add('btn-primary');
+    } else {
+        saveButton.classList.remove('btn-primary');
+        saveButton.classList.add('btn-outline-primary');
+    }
+
+    return isValid;
+}
+
+function updateValidationSummary(isValid, errors) {
+    // Try to find the validation summary elements
+    const summaryEl = document.getElementById('validationSummary');
+    const listEl = document.getElementById('validationList');
+
+    // If elements exist, update them
+    if (summaryEl && listEl) {
+        if (errors.length > 0) {
+            listEl.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
+            summaryEl.className = 'alert alert-danger';
+            summaryEl.classList.remove('d-none');
+        } else if (isValid) {
+            listEl.innerHTML = '<li>All validation checks passed! You can now save and continue.</li>';
+            summaryEl.className = 'alert alert-success';
+            summaryEl.classList.remove('d-none');
+        } else {
+            summaryEl.classList.add('d-none');
+        }
+    } else {
+        // Fallback: show validation results in console for debugging
+        if (errors.length > 0) {
+            console.warn('Validation errors:', errors);
+        } else if (isValid) {
+            console.log('Validation passed!');
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+// Auto-fill institution data from user account
+if (typeof user !== 'undefined' && user.role === 'issuer') {
+    const institutionNameField = document.getElementById('in');
+    const institutionIdField = document.getElementById('ii');
+    const countryField = document.getElementById('ic');
+
+    if (!institutionNameField.value && user.institutionName) {
+        institutionNameField.value = user.institutionName;
+    }
+    if (!institutionIdField.value && user.institutionId) {
+        institutionIdField.value = user.institutionId;
+    }
+    if (!countryField.value && user.countryCode) {
+        countryField.value = user.countryCode;
+    }
+}
+
+// Set default issue date to today
+document.getElementById('di').value = document.getElementById('di').value || new Date().toISOString().split('T')[0];
+
+// Debounce helper function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Real-time validation on input
+document.addEventListener('input', debounce(window.validateForm, 500));
+document.addEventListener('change', window.validateForm);
+
+// Form submission
+document.getElementById('prcDataForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!window.validateForm()) {
+        return false;
+    }
+
+    const submitBtn = document.getElementById('saveAndContinue');
+    if (typeof setLoading === 'function') {
+        setLoading(submitBtn, true);
+    } else {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+    }
+
+    // Collect form data
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+
+    // Submit via AJAX
+    fetch('/prc/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.location.href = '/prc/generate?phase=2';
+        } else {
+            if (typeof setLoading === 'function') {
+                setLoading(submitBtn, false);
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+            // Show errors
+            if (result.errors) {
+                result.errors.forEach(error => {
+                    if (typeof showFieldError === 'function') {
+                        showFieldError(error.field, error.message);
+                    }
+                });
+            }
+        }
+    })
+    .catch(error => {
+        if (typeof setLoading === 'function') {
+            setLoading(submitBtn, false);
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+        }
+        console.warn('Form submission error:', error);
+        alert('An error occurred while saving data. Please try again.');
+    });
+});
+
+// Initialize validation on load
+setTimeout(window.validateForm, 100);
+}); // End DOMContentLoaded
+</script>

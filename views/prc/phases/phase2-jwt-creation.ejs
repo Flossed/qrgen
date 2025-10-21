@@ -1,0 +1,484 @@
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-key me-2"></i>
+        Phase 2: JWT Creation & Preview
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-4">
+            Review the collected data and create the JWT token according to eEHIC specifications.
+            The JWT will be signed using your selected RSA certificate.
+        </p>
+
+        <!-- Data Review Section -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-list-check me-2"></i>
+                        Data Review
+                    </div>
+                    <div class="card-body">
+                        <% if (typeof prcSession !== 'undefined' && prcSession.formData) { %>
+                            <dl class="row small">
+                                <dt class="col-sm-4">Country:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.ic %></dd>
+
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.fn %>, <%= prcSession.formData.gn %></dd>
+
+                                <dt class="col-sm-4">DOB:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.dob %></dd>
+
+                                <dt class="col-sm-4">Personal ID:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.hi %></dd>
+
+                                <dt class="col-sm-4">Institution:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.in %> (<%= prcSession.formData.ii %>)</dd>
+
+                                <dt class="col-sm-4">Validity:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.sd %> to <%= prcSession.formData.ed %></dd>
+
+                                <dt class="col-sm-4">Issue Date:</dt>
+                                <dd class="col-sm-8"><%= prcSession.formData.di %></dd>
+
+                                <% if (prcSession.formData.ci) { %>
+                                    <dt class="col-sm-4">Card ID:</dt>
+                                    <dd class="col-sm-8"><%= prcSession.formData.ci %></dd>
+                                <% } %>
+
+                                <% if (prcSession.formData.xd) { %>
+                                    <dt class="col-sm-4">Card Expiry:</dt>
+                                    <dd class="col-sm-8"><%= prcSession.formData.xd %></dd>
+                                <% } %>
+                            </dl>
+                        <% } else { %>
+                            <div class="text-center text-muted">
+                                <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                                <p class="mt-2">No data available. Please complete Phase 1 first.</p>
+                                <a href="/prc/generate?phase=1" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-arrow-left me-1"></i>Go to Phase 1
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certificate Selection -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Signing Certificate
+                    </div>
+                    <div class="card-body">
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="certificateId" name="certificateId" required>
+                                <option value="">Select certificate for signing</option>
+                                <% if (typeof certificates !== 'undefined' && certificates.length > 0) { %>
+                                    <% certificates.forEach(cert => { %>
+                                        <option value="<%= cert._id %>"
+                                                data-algorithm="<%= cert.algorithm %>"
+                                                data-kid="<%= cert.kid %>"
+                                                data-status="<%= cert.status %>"
+                                                <%= prcSession?.certificateId === cert._id.toString() ? 'selected' : '' %>>
+                                            <%= cert.name %> (<%= cert.algorithm %>) -
+                                            <% if (cert.status === 'active') { %>
+                                                Active
+                                            <% } else { %>
+                                                <%= cert.status %>
+                                            <% } %>
+                                        </option>
+                                    <% }); %>
+                                <% } %>
+                            </select>
+                            <label for="certificateId">Signing Certificate *</label>
+                        </div>
+
+                        <div id="certificateInfo" class="alert alert-info d-none">
+                            <h6 class="alert-heading mb-2">Certificate Details</h6>
+                            <div id="certDetails"></div>
+                        </div>
+
+                        <% if (typeof certificates === 'undefined' || certificates.length === 0) { %>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>No certificates available!</strong><br>
+                                You need to create an RSA certificate before generating JWTs.
+                                <div class="mt-2">
+                                    <a href="/certificates" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-plus-circle me-1"></i>Create Certificate
+                                    </a>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JWT Generation -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-code-square me-2"></i>
+                        JWT Generation
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="jwtPayload" class="form-label">
+                                        <i class="bi bi-braces me-2"></i>JWT Payload Preview
+                                    </label>
+                                    <textarea class="form-control font-monospace" id="jwtPayload" rows="12" readonly
+                                              style="font-size: 0.875rem;"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-info-circle me-2"></i>JWT Information
+                                    </label>
+                                    <div class="card">
+                                        <div class="card-body p-3">
+                                            <dl class="row small mb-0">
+                                                <dt class="col-6">Format:</dt>
+                                                <dd class="col-6">JWT (RFC 7519)</dd>
+
+                                                <dt class="col-6">Schema:</dt>
+                                                <dd class="col-6">eessi:prc:1.0</dd>
+
+                                                <dt class="col-6">Algorithm:</dt>
+                                                <dd class="col-6" id="jwtAlgorithm">-</dd>
+
+                                                <dt class="col-6">Key ID:</dt>
+                                                <dd class="col-6" id="jwtKid">-</dd>
+
+                                                <dt class="col-6">Token ID:</dt>
+                                                <dd class="col-6" id="jwtJti">-</dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-primary" id="generateJWT" disabled>
+                                        <span class="btn-text">
+                                            <i class="bi bi-gear me-2"></i>Generate JWT
+                                        </span>
+                                        <span class="loading-spinner">
+                                            <i class="bi bi-arrow-clockwise spin me-2"></i>Generating...
+                                        </span>
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-secondary" id="validateJWT" disabled>
+                                        <i class="bi bi-check-circle me-2"></i>Validate JWT
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Generated JWT Display -->
+                        <div id="jwtResult" class="mt-4 d-none">
+                            <hr>
+                            <div class="row">
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="bi bi-key me-2"></i>Generated JWT Token
+                                    </label>
+                                    <div class="input-group">
+                                        <textarea class="form-control font-monospace" id="generatedJWT"
+                                                  rows="4" readonly style="font-size: 0.75rem;"></textarea>
+                                        <button class="btn btn-outline-secondary" type="button" id="copyJWT"
+                                                data-bs-toggle="tooltip" title="Copy JWT to clipboard">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <strong>JWT Generated Successfully!</strong><br>
+                                        <small>Token is ready for QR code generation.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-success" id="proceedToQR">
+                                            <i class="bi bi-qr-code me-2"></i>Proceed to QR Generation
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Phase 2 specific validation
+window.validatePhase2 = function() {
+    const certificateSelected = document.getElementById('certificateId').value;
+    const jwtGenerated = document.getElementById('generatedJWT').value;
+
+    return certificateSelected && jwtGenerated;
+};
+
+// Initialize JWT payload preview
+function updateJWTPayload() {
+    const formData = <%= JSON.stringify(typeof prcSession !== 'undefined' ? prcSession.formData || {} : {}) %>;
+
+    if (Object.keys(formData).length === 0) {
+        document.getElementById('jwtPayload').value = 'No data available. Please complete Phase 1 first.';
+        return;
+    }
+
+    // Generate JTI (unique token identifier)
+    const jti = generateJTI();
+    document.getElementById('jwtJti').textContent = jti;
+
+    const payload = {
+        jti: jti,
+        sid: 'eessi:prc:1.0',
+        prc: {
+            ic: formData.ic,
+            fn: formData.fn?.trim(),
+            gn: formData.gn?.trim(),
+            dob: formData.dob,
+            hi: formData.hi?.trim(),
+            in: formData.in?.trim(),
+            ii: formData.ii,
+            sd: formData.sd,
+            ed: formData.ed,
+            di: formData.di
+        }
+    };
+
+    // Add optional fields
+    if (formData.ci && formData.ci.trim()) {
+        payload.prc.ci = formData.ci.trim();
+    }
+    if (formData.xd) {
+        payload.prc.xd = formData.xd;
+    }
+
+    document.getElementById('jwtPayload').value = JSON.stringify(payload, null, 2);
+    return payload;
+}
+
+// Generate unique token identifier
+function generateJTI() {
+    return 'prc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Handle certificate selection
+document.getElementById('certificateId').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const infoDiv = document.getElementById('certificateInfo');
+    const detailsDiv = document.getElementById('certDetails');
+    const generateBtn = document.getElementById('generateJWT');
+
+    if (this.value) {
+        const algorithm = selectedOption.dataset.algorithm;
+        const kid = selectedOption.dataset.kid;
+        const status = selectedOption.dataset.status;
+
+        document.getElementById('jwtAlgorithm').textContent = algorithm;
+        document.getElementById('jwtKid').textContent = kid;
+
+        detailsDiv.innerHTML = `
+            <small>
+                <strong>Algorithm:</strong> ${algorithm}<br>
+                <strong>Key ID:</strong> ${kid}<br>
+                <strong>Status:</strong> ${status}
+            </small>
+        `;
+
+        infoDiv.classList.remove('d-none');
+        generateBtn.disabled = status !== 'active';
+
+        if (status !== 'active') {
+            infoDiv.className = 'alert alert-warning';
+            detailsDiv.innerHTML += '<br><strong>Warning:</strong> Certificate is not active!';
+        } else {
+            infoDiv.className = 'alert alert-info';
+        }
+    } else {
+        infoDiv.classList.add('d-none');
+        generateBtn.disabled = true;
+        document.getElementById('jwtAlgorithm').textContent = '-';
+        document.getElementById('jwtKid').textContent = '-';
+    }
+
+    // Update next button state
+    updateNextButton();
+});
+
+// Generate JWT
+document.getElementById('generateJWT').addEventListener('click', function() {
+    const certificateId = document.getElementById('certificateId').value;
+    const payload = updateJWTPayload();
+
+    if (!certificateId) {
+        alert('Please select a certificate first.');
+        return;
+    }
+
+    if (!payload) {
+        alert('No data available. Please complete Phase 1 first.');
+        return;
+    }
+
+    setLoading(this, true);
+
+    fetch('/prc/phase2/generate-jwt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            payload: payload,
+            certificateId: certificateId
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        setLoading(this, false);
+
+        if (result.success) {
+            document.getElementById('generatedJWT').value = result.jwt;
+            document.getElementById('jwtResult').classList.remove('d-none');
+            document.getElementById('validateJWT').disabled = false;
+
+            // Update global state
+            prcGenerationState.jwt = result.jwt;
+
+            // Enable next phase
+            updateNextButton();
+        } else {
+            alert('JWT generation failed: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        setLoading(this, false);
+        console.error('JWT generation error:', error);
+        alert('An error occurred while generating JWT. Please try again.');
+    });
+});
+
+// Validate JWT
+document.getElementById('validateJWT').addEventListener('click', function() {
+    const jwt = document.getElementById('generatedJWT').value;
+
+    if (!jwt) {
+        alert('No JWT to validate. Please generate JWT first.');
+        return;
+    }
+
+    setLoading(this, true);
+
+    fetch('/prc/phase2/validate-jwt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ jwt: jwt })
+    })
+    .then(response => response.json())
+    .then(result => {
+        setLoading(this, false);
+
+        if (result.valid) {
+            alert('JWT is valid!\n\nHeader: ' + JSON.stringify(result.decoded.header, null, 2) +
+                  '\n\nPayload: ' + JSON.stringify(result.decoded.payload, null, 2));
+        } else {
+            alert('JWT validation failed: ' + (result.error || 'Invalid JWT'));
+        }
+    })
+    .catch(error => {
+        setLoading(this, false);
+        console.error('JWT validation error:', error);
+        alert('An error occurred while validating JWT. Please try again.');
+    });
+});
+
+// Copy JWT to clipboard
+document.getElementById('copyJWT').addEventListener('click', function() {
+    const jwtText = document.getElementById('generatedJWT');
+    jwtText.select();
+    document.execCommand('copy');
+
+    const tooltip = bootstrap.Tooltip.getInstance(this);
+    const originalTitle = this.getAttribute('data-bs-original-title');
+    this.setAttribute('data-bs-original-title', 'Copied!');
+    tooltip.show();
+
+    setTimeout(() => {
+        this.setAttribute('data-bs-original-title', originalTitle);
+    }, 1000);
+});
+
+// Proceed to QR generation
+document.getElementById('proceedToQR').addEventListener('click', function() {
+    const jwt = document.getElementById('generatedJWT').value;
+
+    if (!jwt) {
+        alert('Please generate JWT first.');
+        return;
+    }
+
+    // Save JWT to session and proceed
+    fetch('/prc/phase2/save-jwt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            jwt: jwt,
+            certificateId: document.getElementById('certificateId').value
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.location.href = '/prc/generate?phase=3';
+        } else {
+            alert('Failed to save JWT: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Save JWT error:', error);
+        alert('An error occurred while saving JWT. Please try again.');
+    });
+});
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateJWTPayload();
+
+    // Pre-select certificate if available
+    const savedCertId = '<%= typeof prcSession !== "undefined" ? prcSession.certificateId || "" : "" %>';
+    if (savedCertId) {
+        document.getElementById('certificateId').value = savedCertId;
+        document.getElementById('certificateId').dispatchEvent(new Event('change'));
+    }
+
+    // If JWT already exists, show it
+    const existingJWT = '<%= typeof prcSession !== "undefined" ? prcSession.jwt || "" : "" %>';
+    if (existingJWT) {
+        document.getElementById('generatedJWT').value = existingJWT;
+        document.getElementById('jwtResult').classList.remove('d-none');
+        document.getElementById('validateJWT').disabled = false;
+    }
+
+    updateNextButton();
+});
+</script>

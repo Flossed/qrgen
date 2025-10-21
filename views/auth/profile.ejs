@@ -1,0 +1,232 @@
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-gear me-2"></i>
+                Profile Settings
+            </div>
+            <div class="card-body">
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <%= success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <form id="profileForm" action="/auth/profile" method="POST">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-person text-primary" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-person me-2"></i>Personal Information
+                    </h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="firstName" name="firstName"
+                                       placeholder="First Name" required
+                                       value="<%= user.firstName %>">
+                                <label for="firstName">First Name</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="lastName" name="lastName"
+                                       placeholder="Last Name" required
+                                       value="<%= user.lastName %>">
+                                <label for="lastName">Last Name</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="email" name="email"
+                               placeholder="Email Address" required readonly
+                               value="<%= user.email %>">
+                        <label for="email">Email Address</label>
+                        <div class="form-text">Email cannot be changed. Contact administrator if needed.</div>
+                    </div>
+
+                    <!-- Role Information -->
+                    <h6 class="text-muted mb-3 mt-4">
+                        <i class="bi bi-shield-check me-2"></i>Account Information
+                    </h6>
+
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" value="<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>" readonly>
+                        <label>Account Role</label>
+                    </div>
+
+                    <% if (user.role === 'issuer') { %>
+                        <!-- Institution Information -->
+                        <h6 class="text-muted mb-3 mt-4">
+                            <i class="bi bi-building me-2"></i>Institution Information
+                        </h6>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="organization" name="organization"
+                                   placeholder="Organization"
+                                   value="<%= user.organization || '' %>">
+                            <label for="organization">Organization</label>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="institutionId" name="institutionId"
+                                   placeholder="Institution ID" readonly
+                                   value="<%= user.institutionId || '' %>">
+                            <label for="institutionId">Institution ID</label>
+                            <div class="form-text">Institution ID cannot be changed. Contact administrator if needed.</div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <select class="form-select" id="country" name="country" disabled>
+                                <option value="">Select country</option>
+                                <option value="AT" <%= user.country === 'AT' ? 'selected' : '' %>>Austria</option>
+                                <option value="BE" <%= user.country === 'BE' ? 'selected' : '' %>>Belgium</option>
+                                <option value="BG" <%= user.country === 'BG' ? 'selected' : '' %>>Bulgaria</option>
+                                <option value="HR" <%= user.country === 'HR' ? 'selected' : '' %>>Croatia</option>
+                                <option value="CY" <%= user.country === 'CY' ? 'selected' : '' %>>Cyprus</option>
+                                <option value="CZ" <%= user.country === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
+                                <option value="DK" <%= user.country === 'DK' ? 'selected' : '' %>>Denmark</option>
+                                <option value="EE" <%= user.country === 'EE' ? 'selected' : '' %>>Estonia</option>
+                                <option value="FI" <%= user.country === 'FI' ? 'selected' : '' %>>Finland</option>
+                                <option value="FR" <%= user.country === 'FR' ? 'selected' : '' %>>France</option>
+                                <option value="DE" <%= user.country === 'DE' ? 'selected' : '' %>>Germany</option>
+                                <option value="GR" <%= user.country === 'GR' ? 'selected' : '' %>>Greece</option>
+                                <option value="HU" <%= user.country === 'HU' ? 'selected' : '' %>>Hungary</option>
+                                <option value="IE" <%= user.country === 'IE' ? 'selected' : '' %>>Ireland</option>
+                                <option value="IT" <%= user.country === 'IT' ? 'selected' : '' %>>Italy</option>
+                                <option value="LV" <%= user.country === 'LV' ? 'selected' : '' %>>Latvia</option>
+                                <option value="LT" <%= user.country === 'LT' ? 'selected' : '' %>>Lithuania</option>
+                                <option value="LU" <%= user.country === 'LU' ? 'selected' : '' %>>Luxembourg</option>
+                                <option value="MT" <%= user.country === 'MT' ? 'selected' : '' %>>Malta</option>
+                                <option value="NL" <%= user.country === 'NL' ? 'selected' : '' %>>Netherlands</option>
+                                <option value="PL" <%= user.country === 'PL' ? 'selected' : '' %>>Poland</option>
+                                <option value="PT" <%= user.country === 'PT' ? 'selected' : '' %>>Portugal</option>
+                                <option value="RO" <%= user.country === 'RO' ? 'selected' : '' %>>Romania</option>
+                                <option value="SK" <%= user.country === 'SK' ? 'selected' : '' %>>Slovakia</option>
+                                <option value="SI" <%= user.country === 'SI' ? 'selected' : '' %>>Slovenia</option>
+                                <option value="ES" <%= user.country === 'ES' ? 'selected' : '' %>>Spain</option>
+                                <option value="SE" <%= user.country === 'SE' ? 'selected' : '' %>>Sweden</option>
+                                <option value="IS" <%= user.country === 'IS' ? 'selected' : '' %>>Iceland</option>
+                                <option value="LI" <%= user.country === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
+                                <option value="NO" <%= user.country === 'NO' ? 'selected' : '' %>>Norway</option>
+                                <option value="CH" <%= user.country === 'CH' ? 'selected' : '' %>>Switzerland</option>
+                                <option value="UK" <%= user.country === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                            </select>
+                            <label for="country">Country</label>
+                            <div class="form-text">Country cannot be changed. Contact administrator if needed.</div>
+                        </div>
+                    <% } %>
+
+                    <!-- Account Details -->
+                    <h6 class="text-muted mb-3 mt-4">
+                        <i class="bi bi-clock me-2"></i>Account Details
+                    </h6>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" readonly
+                                       value="<%= new Date(user.createdAt).toLocaleDateString() %>">
+                                <label>Member Since</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" readonly
+                                       value="<%= user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never' %>">
+                                <label>Last Login</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="bi bi-key me-2"></i>
+                Change Password
+            </div>
+            <div class="card-body">
+                <form id="passwordForm" action="/auth/change-password" method="POST">
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword"
+                               placeholder="Current Password" required>
+                        <label for="currentPassword">Current Password</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="newPassword" name="newPassword"
+                               placeholder="New Password" required minlength="8">
+                        <label for="newPassword">New Password</label>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+                               placeholder="Confirm New Password" required>
+                        <label for="confirmPassword">Confirm New Password</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-shield-lock me-2"></i>Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password confirmation validation
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = this.value;
+
+    if (newPassword !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+    }
+});
+
+// Form submission handlers
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+});
+
+document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+});
+</script>

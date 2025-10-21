@@ -1,0 +1,98 @@
+# Trivy Configuration for PRC QR Generator
+# ==========================================
+# Configuration file for Trivy security scanner
+# Documentation: https://aquasecurity.github.io/trivy/
+
+# Scan settings
+scan:
+  # Scan for vulnerabilities, secrets, and misconfigurations
+  security-checks:
+    - vuln
+    - secret
+    - config
+
+  # Severity levels to report
+  severity:
+    - CRITICAL
+    - HIGH
+    - MEDIUM
+    - LOW
+
+  # File patterns to scan
+  file-patterns:
+    - "*.js"
+    - "*.json"
+    - "*.yml"
+    - "*.yaml"
+
+# Vulnerability settings
+vulnerability:
+  # Vulnerability types to detect
+  type:
+    - os
+    - library
+
+  # Ignore unfixed vulnerabilities
+  ignore-unfixed: false
+
+# Secret scanning settings
+secret:
+  # Secret types to detect
+  config: trivy-secret.yaml
+
+# Misconfiguration settings
+misconfiguration:
+  # Enable misconfiguration scanning
+  include-non-failures: false
+
+# Output settings
+output:
+  # Output format (table, json, sarif, cyclonedx, etc.)
+  format: table
+
+  # Template for output formatting
+  # template: "@/path/to/template"
+
+# Cache settings
+cache:
+  # Cache directory
+  dir: .trivycache
+
+# Database settings
+db:
+  # Skip database update
+  skip-update: false
+
+  # Database repository
+  repository: ghcr.io/aquasecurity/trivy-db
+
+# Ignore settings
+ignore:
+  # Ignore file
+  policy: .trivyignore
+
+# Exit code settings
+exit:
+  # Exit code when vulnerabilities are found
+  code: 0  # Don't fail the scan, just report
+
+# Timeout settings
+timeout:
+  # Timeout for scan
+  duration: 5m0s
+
+# Skip settings
+skip:
+  # Directories to skip
+  dirs:
+    - node_modules
+    - .git
+    - .trivycache
+    - logs
+    - reports
+
+  # Files to skip
+  files:
+    - "*.test.js"
+    - "*.spec.js"
+    - "test/**"

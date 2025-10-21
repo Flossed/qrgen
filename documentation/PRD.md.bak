@@ -1,0 +1,103 @@
+# QR Code Generator
+# Abstract 
+This application will simulates a european healthcare EHIC issuance application which can issue electronic EHIC Profisional replacement Certificates that are regular PRCS extended with a QR code whic contains the EHIC in a EIDAS compliant way.
+
+The purpose of the application is to:
+1. have an application which can generate ePRC's with a QR code for testing the verifier. 
+2. allowing users to see and understand the flow for creating material based Verifiable Credentials
+3. be a playground for users to play around with the concept of PRC. 
+
+For this we use the specifications of the eEhic which defines the data specification of the payload of the ehic and the technical envelop. 
+The important design decision is to create a self contained document which is cryptographicall sealed and can prove in a 
+none repudaited way the information concerning the issuer of the document and the information in the document, which is due to the sealing tamper resistant. 
+
+
+
+# Software stack and used formats.
+Used programming if : CommonJS.
+## Used NPM modules
+- node.js :  20.19.0
+- npm : 10.8.2
+- mongodb with mongoose :  8.0.3
+- @zandd/app-logger : 1.1.1
+- ajv : 8.12.0
+- ajv-formats : 2.1.1
+- axios : 1.6.2 
+- base45 : 2.0.0 
+- bcrypt : 5.1.1 
+- body-parser : 1.20.2 
+- crypto : 1.0.1 
+- ejs : 3.1.9 
+- express : 4.18.2 
+- express-session : 1.17.3 
+- html5-qrcode : 2.3.8 
+- jsonwebtoken : 9.0.2 
+- jsqr : 1.4.0 
+- mongoose : 8.0.3 
+- multer : 2.0.2 
+- node-qr-image : 0.0.1 
+- nodemailer : 7.0.6 
+- pako : 2.1.0 
+- pdfkit : 0.17.2 
+- qrcode : 1.5.4 
+- qrcode-generator : 2.0.4 
+- qrcode-reader : 1.0.4 
+- sharp : 0.34.4  
+- nodemon : 3.0.2
+
+
+
+# Functionality: 
+The application will have the following functionalities. 
+##  User management according to : 
+##  Citzens Dashboard from which a citizen can request the PRC. see passed request, and request reissuance of past requests.
+##  Health Care Dashboard from which a Clerk from the insitution can see the EHIC requests and is able to approve, issue and revoke.
+## Admin dashboard from which an Administrator can see the usage, post maintenance banners. Create Reports based on KPI's, manage users 
+
+### Request PRC flow:
+#### Requirements. 
+1. the citizen has an account, can access his account, and has a complete profile set up which contains the personal information of an EHIC.
+2. the citizen has chosen a Healthcare insitution and is registered and know by an ID. 
+
+#### Flow Citizen EHIC request flow 
+1. the citizen log on to the system
+2. after successfull login the citizen sees its dashboard, he can see past requested EHIC's and can request a new one. 
+3. upon requesting the EHIC , the citizen needs to identify to which country he will travel for which he requires the EHIC and the travel to and return date.
+4. based on the choice made the system can warn if the receiving coutrny supports ehic or not
+5. the citizen receive a status message the the request was done, and that he will receive the outcome within 10 working days. An email is sent to the users email box stating that the 
+  
+
+Data from the PRC comes from 3 sources 
+1. profile of the user for all user related data.  has a relation with the healthcare institution 1:1, and a relation with the ehic created for the user 1:many
+2. profile of the chosen healthcare institution for all the healtcare related information. has a relation with the user 1:1, and a relation with the ehic created for the insitution 1:many
+3. the list of EHIC's which are entitlements for which the data of the QR code can be generated. see abov for the relations.
+
+in the proces after requestin gthe EHIC first an Ehic request is checked to see if it is a valid request, aftwer which the ehic is created. 
+
+
+## Template
+For the file structure use:   E:\_Applications\___Claude\TEMPLATE as a template to create. 
+
+### Directory structure : 
+* .git : a local git repository
+* config : which contains a json file which contains all the configurable items in the project.
+* controllers : which according to MVC pattern contains the all the controllers that manage the project every endpoint * including API endpoint will have a separate controller in this directory. (there is no separate route directory.)
+* documentation : for all the documents created during this creation process, excluding Readme.md and changelog.md which are in the root of the projectdirectory. 
+* models : containing the MODELS fromthe MVC pattern which are all created in mongoose
+* public : containing all the static content required on serverside
+*public\CSS for stylesheets, 
+* public\js for clientside javascript, 
+* public\img for images used in the project, 
+* public\lang for all the translated text files used in the application ( purpose to support multilingual applications)
+* services : for all the middleware and business logic created which is to contain the bulk of the processing and business logic and is * called from the controllers.
+* test : for all unit and integration tests created using mocha, nyc, chai in a tdd approach should have 100% coverage
+* views : containing the VIEW in the MCV pattern which are EJS files 
+*         the EJS files do not contain:
+*         - CSS this will go in the public/css subdirectory.
+*         - javascript this goes in the public/js subdirectory where the javascript file bares the same name as the view * file and is included in the ejs file at the end. 
+*         The ejs file does contain: 
+*         - templates for header, footer and any other reocurring page elements that make up the style of the application.
+*         
+* The main file will be called index.js
+* there is a showChangeCounts.js in the root to be copied from the template, which is a helper function for stats.
+* there is a updateVersions.js in the root to be copied from the template, which is a helper function for stats.

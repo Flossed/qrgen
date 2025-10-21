@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\.a05767522911b937da596aacc289b14bd82a778c-audit.json",
+    "files": [
+        {
+            "date": 1760956193969,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\QRCodeService-2025-10-20.log",
+            "hash": "fe053610195d93e45bd8e5ce98f420a89a60889b146022d6110c3946e65f6067"
+        },
+        {
+            "date": 1761029115129,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\QRCodeService-2025-10-21.log",
+            "hash": "bae5ddeea0c599f1b208eed26bf4d3e573df5e56de028575aff9d523403f1677"
+        }
+    ],
+    "hashType": "sha256"
+}

@@ -1,0 +1,459 @@
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center mb-4">
+            <a href="/certificates" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h3 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>
+                Create New RSA Certificate
+            </h3>
+        </div>
+
+        <!-- Certificate Generation Form -->
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-key me-2"></i>
+                Certificate Configuration
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Create a new RSA certificate for signing JWT tokens. The certificate will be generated
+                    according to eEHIC specifications with proper Key ID (Kid) format and SHA-256 thumbprint.
+                </p>
+
+                <form id="certificateForm" action="/certificates/create" method="POST">
+                    <div class="row">
+                        <!-- Certificate Details -->
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-info-circle me-2"></i>Certificate Details
+                            </h6>
+
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="name" name="name"
+                                       placeholder="Certificate name" required maxlength="100"
+                                       value="<%= typeof formData !== 'undefined' ? formData.name || '' : '' %>">
+                                <label for="name">Certificate Name *</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <textarea class="form-control" id="description" name="description"
+                                          placeholder="Description (optional)" rows="3" maxlength="500"
+                                          style="height: 100px;"><%= typeof formData !== 'undefined' ? formData.description || '' : '' %></textarea>
+                                <label for="description">Description</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="purpose" name="purpose" required>
+                                    <option value="">Select certificate purpose</option>
+                                    <option value="prc-signing" <%= typeof formData !== 'undefined' && formData.purpose === 'prc-signing' ? 'selected' : '' %>>
+                                        PRC Document Signing
+                                    </option>
+                                    <option value="jwt-signing" <%= typeof formData !== 'undefined' && formData.purpose === 'jwt-signing' ? 'selected' : '' %>>
+                                        JWT Token Signing
+                                    </option>
+                                    <option value="general" <%= typeof formData !== 'undefined' && formData.purpose === 'general' ? 'selected' : '' %>>
+                                        General Purpose
+                                    </option>
+                                </select>
+                                <label for="purpose">Certificate Purpose *</label>
+                            </div>
+                        </div>
+
+                        <!-- Technical Configuration -->
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-gear me-2"></i>Technical Configuration
+                            </h6>
+
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="keySize" name="keySize" required>
+                                    <option value="">Select key size</option>
+                                    <option value="2048" <%= typeof formData !== 'undefined' && formData.keySize === '2048' ? 'selected' : 'selected' %>>
+                                        2048 bits (Standard)
+                                    </option>
+                                    <option value="3072" <%= typeof formData !== 'undefined' && formData.keySize === '3072' ? 'selected' : '' %>>
+                                        3072 bits (Enhanced)
+                                    </option>
+                                    <option value="4096" <%= typeof formData !== 'undefined' && formData.keySize === '4096' ? 'selected' : '' %>>
+                                        4096 bits (Maximum Security)
+                                    </option>
+                                </select>
+                                <label for="keySize">RSA Key Size *</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="algorithm" name="algorithm" required>
+                                    <option value="">Select signing algorithm</option>
+                                    <option value="RS256" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS256' ? 'selected' : 'selected' %>>
+                                        RS256 (SHA-256 with RSA)
+                                    </option>
+                                    <option value="RS384" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS384' ? 'selected' : '' %>>
+                                        RS384 (SHA-384 with RSA)
+                                    </option>
+                                    <option value="RS512" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS512' ? 'selected' : '' %>>
+                                        RS512 (SHA-512 with RSA)
+                                    </option>
+                                </select>
+                                <label for="algorithm">Signing Algorithm *</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <input type="number" class="form-control" id="validityDays" name="validityDays"
+                                       placeholder="Validity period in days" min="30" max="3650"
+                                       value="<%= typeof formData !== 'undefined' ? formData.validityDays || '730' : '730' %>">
+                                <label for="validityDays">Validity Period (Days)</label>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Options -->
+                        <div class="col-12 mt-3">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-sliders me-2"></i>Advanced Options
+                            </h6>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="autoActivate" name="autoActivate" checked>
+                                <label class="form-check-label" for="autoActivate">
+                                    Automatically activate certificate after creation
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="allowExport" name="allowExport" checked>
+                                <label class="form-check-label" for="allowExport">
+                                    Allow public key export
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="tags" name="tags"
+                                       placeholder="Tags (comma-separated)"
+                                       value="<%= typeof formData !== 'undefined' ? formData.tags || '' : '' %>">
+                                <label for="tags">Tags (Optional)</label>
+                            </div>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="col-12 mt-3">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="bi bi-shield-check me-2"></i>Security Information
+                                </h6>
+                                <ul class="mb-0 small">
+                                    <li>Private keys are securely stored and encrypted</li>
+                                    <li>Key ID (Kid) will be generated in eEHIC format: EESSI:x5t#S256:[thumbprint]</li>
+                                    <li>Certificate thumbprint calculated using SHA-256</li>
+                                    <li>Private keys never leave the server and cannot be exported</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Generation Preview -->
+                        <div class="col-12" id="generationPreview" style="display: none;">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <i class="bi bi-eye me-2"></i>Generation Preview
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row small">
+                                        <dt class="col-sm-3">Certificate Name:</dt>
+                                        <dd class="col-sm-9" id="previewName">-</dd>
+
+                                        <dt class="col-sm-3">Key Size:</dt>
+                                        <dd class="col-sm-9" id="previewKeySize">-</dd>
+
+                                        <dt class="col-sm-3">Algorithm:</dt>
+                                        <dd class="col-sm-9" id="previewAlgorithm">-</dd>
+
+                                        <dt class="col-sm-3">Validity Period:</dt>
+                                        <dd class="col-sm-9" id="previewValidity">-</dd>
+
+                                        <dt class="col-sm-3">Kid Format:</dt>
+                                        <dd class="col-sm-9">EESSI:x5t#S256:[SHA-256 thumbprint]</dd>
+
+                                        <dt class="col-sm-3">Generation Time:</dt>
+                                        <dd class="col-sm-9" id="previewGenerationTime">Estimated 2-5 seconds</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="col-12 mt-4">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <button type="button" class="btn btn-outline-primary" id="previewBtn">
+                                        <i class="bi bi-eye me-2"></i>Preview Configuration
+                                    </button>
+                                </div>
+                                <div>
+                                    <a href="/certificates" class="btn btn-outline-secondary me-2">
+                                        <i class="bi bi-x me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" id="createBtn">
+                                        <span class="btn-text">
+                                            <i class="bi bi-plus-circle me-2"></i>Create Certificate
+                                        </span>
+                                        <span class="loading-spinner">
+                                            <i class="bi bi-arrow-clockwise spin me-2"></i>Generating...
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Generation Progress -->
+        <div id="generationProgress" class="card mt-4" style="display: none;">
+            <div class="card-header">
+                <i class="bi bi-activity me-2"></i>
+                Certificate Generation Progress
+            </div>
+            <div class="card-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                         role="progressbar" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div id="progressLog" class="font-monospace small" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <!-- Information Cards -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Key Size Recommendations
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <strong>2048 bits:</strong> Standard security, fast generation and signing.
+                                Suitable for most PRC documents.
+                            </li>
+                            <li class="mb-2">
+                                <strong>3072 bits:</strong> Enhanced security, balanced performance.
+                                Recommended for sensitive applications.
+                            </li>
+                            <li class="mb-2">
+                                <strong>4096 bits:</strong> Maximum security, slower generation.
+                                Use for high-value or long-term certificates.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-shield-lock me-2"></i>
+                        Algorithm Information
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <strong>RS256:</strong> Most commonly used, excellent compatibility.
+                                Recommended for general use.
+                            </li>
+                            <li class="mb-2">
+                                <strong>RS384:</strong> Enhanced hash security, good for sensitive data.
+                                Balanced security and performance.
+                            </li>
+                            <li class="mb-2">
+                                <strong>RS512:</strong> Maximum hash security, largest signature size.
+                                Use for maximum security requirements.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update generation preview
+function updatePreview() {
+    const name = document.getElementById('name').value;
+    const keySize = document.getElementById('keySize').value;
+    const algorithm = document.getElementById('algorithm').value;
+    const validityDays = document.getElementById('validityDays').value;
+
+    if (name && keySize && algorithm) {
+        document.getElementById('previewName').textContent = name;
+        document.getElementById('previewKeySize').textContent = keySize + ' bits';
+        document.getElementById('previewAlgorithm').textContent = algorithm;
+
+        if (validityDays) {
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + parseInt(validityDays));
+            document.getElementById('previewValidity').textContent =
+                `${validityDays} days (expires ${expiryDate.toLocaleDateString()})`;
+        } else {
+            document.getElementById('previewValidity').textContent = 'No expiry';
+        }
+
+        // Estimate generation time based on key size
+        const estimatedTime = keySize === '4096' ? '5-10 seconds' :
+                             keySize === '3072' ? '3-7 seconds' : '2-5 seconds';
+        document.getElementById('previewGenerationTime').textContent = `Estimated ${estimatedTime}`;
+    }
+}
+
+// Show/hide preview
+document.getElementById('previewBtn').addEventListener('click', function() {
+    const preview = document.getElementById('generationPreview');
+    if (preview.style.display === 'none') {
+        updatePreview();
+        preview.style.display = 'block';
+        this.innerHTML = '<i class="bi bi-eye-slash me-2"></i>Hide Preview';
+    } else {
+        preview.style.display = 'none';
+        this.innerHTML = '<i class="bi bi-eye me-2"></i>Preview Configuration';
+    }
+});
+
+// Update preview on input changes
+document.querySelectorAll('#name, #keySize, #algorithm, #validityDays').forEach(input => {
+    input.addEventListener('change', updatePreview);
+});
+
+// Log progress message
+function logProgress(message) {
+    const log = document.getElementById('progressLog');
+    const timestamp = new Date().toLocaleTimeString();
+    log.innerHTML += `[${timestamp}] ${message}\n`;
+    log.scrollTop = log.scrollHeight;
+}
+
+// Update progress bar
+function updateProgress(percentage, message) {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = percentage + '%';
+    progressBar.textContent = Math.round(percentage) + '%';
+
+    if (message) {
+        logProgress(message);
+    }
+}
+
+// Form submission
+document.getElementById('certificateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('createBtn');
+    const progressDiv = document.getElementById('generationProgress');
+
+    setLoading(submitBtn, true);
+    progressDiv.style.display = 'block';
+    document.getElementById('progressLog').innerHTML = '';
+
+    // Simulate progress steps
+    updateProgress(10, 'Validating certificate configuration...');
+
+    // Collect form data
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+
+    // Convert checkbox values
+    data.autoActivate = data.autoActivate === 'on';
+    data.allowExport = data.allowExport === 'on';
+
+    setTimeout(() => {
+        updateProgress(30, 'Generating RSA key pair...');
+
+        fetch('/certificates/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            updateProgress(70, 'Processing server response...');
+            return response.json();
+        })
+        .then(result => {
+            if (result.success) {
+                updateProgress(90, 'Calculating certificate thumbprint...');
+
+                setTimeout(() => {
+                    updateProgress(100, 'Certificate created successfully!');
+
+                    setTimeout(() => {
+                        window.location.href = `/certificates/${result.certificateId}`;
+                    }, 1000);
+                }, 500);
+            } else {
+                setLoading(submitBtn, false);
+                updateProgress(0, `Certificate creation failed: ${result.error}`);
+
+                // Show field-specific errors
+                if (result.errors) {
+                    result.errors.forEach(error => {
+                        showFieldError(error.field, error.message);
+                    });
+                }
+
+                alert('Certificate creation failed: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            setLoading(submitBtn, false);
+            updateProgress(0, `Network error: ${error.message}`);
+            console.error('Certificate creation error:', error);
+            alert('An error occurred while creating the certificate. Please try again.');
+        });
+    }, 1000);
+});
+
+// Form validation
+function validateForm() {
+    const requiredFields = ['name', 'purpose', 'keySize', 'algorithm'];
+    let isValid = true;
+
+    requiredFields.forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        if (!field.value.trim()) {
+            isValid = false;
+            field.classList.add('is-invalid');
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+
+    return isValid;
+}
+
+// Real-time validation
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('is-invalid')) {
+        e.target.classList.remove('is-invalid');
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default values
+    if (!document.getElementById('keySize').value) {
+        document.getElementById('keySize').value = '2048';
+    }
+    if (!document.getElementById('algorithm').value) {
+        document.getElementById('algorithm').value = 'RS256';
+    }
+
+    updatePreview();
+});
+</script>

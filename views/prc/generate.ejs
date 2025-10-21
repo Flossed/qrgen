@@ -1,0 +1,260 @@
+
+<!-- Progress Indicator -->
+<div class="progress-indicator">
+    <div class="progress-line">
+        <div class="progress-line-fill" style="width: <%= (currentPhase - 1) * 33.33 %>%"></div>
+    </div>
+    <div class="progress-step <%= currentPhase >= 1 ? 'active' : '' %> <%= currentPhase > 1 ? 'completed' : '' %>">
+        <div class="step-circle">
+            <% if (currentPhase > 1) { %>
+                <i class="bi bi-check"></i>
+            <% } else { %>
+                1
+            <% } %>
+        </div>
+        <div class="step-label">Data Input</div>
+    </div>
+    <div class="progress-step <%= currentPhase >= 2 ? 'active' : '' %> <%= currentPhase > 2 ? 'completed' : '' %>">
+        <div class="step-circle">
+            <% if (currentPhase > 2) { %>
+                <i class="bi bi-check"></i>
+            <% } else { %>
+                2
+            <% } %>
+        </div>
+        <div class="step-label">JWT Creation</div>
+    </div>
+    <div class="progress-step <%= currentPhase >= 3 ? 'active' : '' %> <%= currentPhase > 3 ? 'completed' : '' %>">
+        <div class="step-circle">
+            <% if (currentPhase > 3) { %>
+                <i class="bi bi-check"></i>
+            <% } else { %>
+                3
+            <% } %>
+        </div>
+        <div class="step-label">QR Generation</div>
+    </div>
+    <div class="progress-step <%= currentPhase >= 4 ? 'active' : '' %> <%= currentPhase > 4 ? 'completed' : '' %>">
+        <div class="step-circle">
+            <% if (currentPhase > 4) { %>
+                <i class="bi bi-check"></i>
+            <% } else { %>
+                4
+            <% } %>
+        </div>
+        <div class="step-label">PDF & Email</div>
+    </div>
+</div>
+
+<!-- Phase Content -->
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <% if (currentPhase === 1) { %>
+            <!-- Phase 1: Data Input -->
+            <%- include('phases/phase1-data-input') %>
+        <% } else if (currentPhase === 2) { %>
+            <!-- Phase 2: JWT Creation -->
+            <%- include('phases/phase2-jwt-creation') %>
+        <% } else if (currentPhase === 3) { %>
+            <!-- Phase 3: QR Code Generation -->
+            <%- include('phases/phase3-qr-generation') %>
+        <% } else if (currentPhase === 4) { %>
+            <!-- Phase 4: PDF & Email -->
+            <%- include('phases/phase4-pdf-email') %>
+        <% } else { %>
+            <!-- Default: Start Phase -->
+            <div class="card">
+                <div class="card-header text-center">
+                    <i class="bi bi-qr-code me-2"></i>
+                    Generate Provisional Replacement Certificate
+                </div>
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-patch-check" style="font-size: 4rem; color: var(--primary-color);"></i>
+                    </div>
+                    <h4 class="mb-3">eEHIC Compliant PRC Generator</h4>
+                    <p class="text-muted mb-4">
+                        Generate Provisional Replacement Certificates following Decision S2 technical specifications
+                        with secure JWT tokens, Base45 encoded QR codes, and PDF documents.
+                    </p>
+                    <a href="/prc/generate?phase=1" class="btn btn-primary btn-lg">
+                        <i class="bi bi-play-circle me-2"></i>Start Generation Process
+                    </a>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Navigation Controls -->
+        <% if (currentPhase > 0 && currentPhase <= 4) { %>
+            <div class="row mt-4">
+                <div class="col-6">
+                    <% if (currentPhase > 1) { %>
+                        <a href="/prc/generate?phase=<%= currentPhase - 1 %>" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Previous
+                        </a>
+                    <% } else { %>
+                        <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                            <i class="bi bi-house me-2"></i>Dashboard
+                        </a>
+                    <% } %>
+                </div>
+                <div class="col-6 text-end">
+                    <% if (currentPhase < 4) { %>
+                        <button type="button" class="btn btn-primary" onclick="proceedToNextPhase()" disabled id="nextPhaseBtn">
+                            Next<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- Session Data Display (Debug Mode) -->
+<% if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') { %>
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-bug me-2"></i>
+                    Development Debug Info
+                </div>
+                <div class="card-body">
+                    <h6>Session Data:</h6>
+                    <pre class="bg-light p-3 rounded"><%= JSON.stringify(typeof prcSession !== 'undefined' ? prcSession : {}, null, 2) %></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+<% } %>
+
+<script>
+// Global PRC Generation State
+let prcGenerationState = {
+    currentPhase: <%= currentPhase || 0 %>,
+    formData: <%= JSON.stringify(typeof prcSession !== 'undefined' ? prcSession.formData || {} : {}) %>,
+    jwt: '<%= typeof prcSession !== 'undefined' ? prcSession.jwt || '' : '' %>',
+    qrCode: '<%= typeof prcSession !== 'undefined' ? prcSession.qrCode || '' : '' %>',
+    pdfGenerated: <%= typeof prcSession !== 'undefined' ? !!prcSession.pdfGenerated : false %>
+};
+
+// Proceed to next phase
+function proceedToNextPhase() {
+    const nextPhase = prcGenerationState.currentPhase + 1;
+
+    if (nextPhase <= 4) {
+        // Validate current phase before proceeding
+        if (validateCurrentPhase()) {
+            window.location.href = `/prc/generate?phase=${nextPhase}`;
+        }
+    }
+}
+
+// Validate current phase data
+function validateCurrentPhase() {
+    switch (prcGenerationState.currentPhase) {
+        case 1:
+            return validatePhase1Data();
+        case 2:
+            return validatePhase2Data();
+        case 3:
+            return validatePhase3Data();
+        default:
+            return true;
+    }
+}
+
+// Enable/disable next button based on validation
+function updateNextButton() {
+    const nextBtn = document.getElementById('nextPhaseBtn');
+    if (nextBtn) {
+        const isValid = validateCurrentPhase();
+        nextBtn.disabled = !isValid;
+
+        if (isValid) {
+            nextBtn.classList.remove('btn-outline-primary');
+            nextBtn.classList.add('btn-primary');
+        } else {
+            nextBtn.classList.remove('btn-primary');
+            nextBtn.classList.add('btn-outline-primary');
+        }
+    }
+}
+
+// Auto-save form data
+function autoSaveFormData() {
+    const formData = {};
+    const form = document.querySelector('form');
+
+    if (form) {
+        const formElements = form.querySelectorAll('input, select, textarea');
+        formElements.forEach(element => {
+            if (element.name) {
+                formData[element.name] = element.value;
+            }
+        });
+
+        // Save to session via AJAX
+        fetch('/prc/auto-save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ formData: formData })
+        }).catch(console.error);
+    }
+}
+
+// Initialize auto-save
+if (prcGenerationState.currentPhase >= 1) {
+    // Auto-save every 30 seconds
+    setInterval(autoSaveFormData, 30000);
+
+    // Auto-save on input change
+    document.addEventListener('input', debounce(autoSaveFormData, 2000));
+
+    // Update next button on input
+    document.addEventListener('input', updateNextButton);
+    document.addEventListener('change', updateNextButton);
+}
+
+// Debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Phase-specific validation functions (to be implemented in phase templates)
+function validatePhase1Data() {
+    // Implemented in phase1-data-input.ejs
+    return window.validatePhase1 ? window.validatePhase1() : false;
+}
+
+function validatePhase2Data() {
+    // Implemented in phase2-jwt-creation.ejs
+    return window.validatePhase2 ? window.validatePhase2() : false;
+}
+
+function validatePhase3Data() {
+    // Implemented in phase3-qr-generation.ejs
+    return window.validatePhase3 ? window.validatePhase3() : false;
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    updateNextButton();
+
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>

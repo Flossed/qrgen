@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\.aadf726bfc187edeef90abb5cbb8ff40b2729e45-audit.json",
+    "files": [
+        {
+            "date": 1760955936724,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\CertRoutes-2025-10-20.log",
+            "hash": "cbb402742eefec41a1c56e41ea99612683ce033620d4ef4254f806a280fc9d01"
+        },
+        {
+            "date": 1761029115332,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\CertRoutes-2025-10-21.log",
+            "hash": "beae56df9229860d8fd62c71be3de82f64b2a63c9ea6519fe62069d580372088"
+        }
+    ],
+    "hashType": "sha256"
+}

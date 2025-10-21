@@ -1,0 +1,11 @@
+# Trivy Ignore File for PRC QR Generator
+# ========================================
+# This file contains vulnerabilities that have been reviewed and accepted
+# Format: CVE-ID or package-name
+# Add comments explaining why each vulnerability is ignored
+
+# Example:
+# CVE-2024-12345 # Accepted: False positive for development dependency
+# npm-package@version # Accepted: No fix available, mitigated by configuration
+
+# Add ignored vulnerabilities below:

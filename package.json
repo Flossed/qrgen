@@ -1,0 +1,93 @@
+{
+  "name": "prc-qr-generator",
+  "version": "1.0.0",
+  "description": "PRC QR Code Generator Application - Multi-phase eEHIC compliant document generation",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flossed/prc-qr-generator.git"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "updateVersions": "node updateVersions",
+    "test": "mocha --recursive --timeout 10000 --exit",
+    "test:watch": "mocha --recursive --watch",
+    "test:coverage": "nyc mocha --recursive",
+    "test:single": "mocha",
+    "security:scan": "trivy fs . --config trivy.yaml",
+    "security:scan:json": "trivy fs . --format json --output reports/trivy-report.json",
+    "security:scan:sarif": "trivy fs . --format sarif --output reports/trivy-results.sarif",
+    "security:scan:critical": "trivy fs . --severity CRITICAL,HIGH --exit-code 1",
+    "security:scan:full": "mkdir -p reports && trivy fs . --format table --output reports/trivy-report.txt && trivy fs . --format json --output reports/trivy-report.json && trivy fs . --format sarif --output reports/trivy-results.sarif && echo Security scan complete - reports in ./reports/",
+    "security:update": "trivy image --download-db-only"
+  },
+  "author": "Daniel S .A. Khan (c)",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^5.2.1",
+    "eslint": "^8.50.0",
+    "mocha": "^10.2.0",
+    "nodemon": "^2.0.15",
+    "nyc": "^17.1.0"
+  },
+  "nyc": {
+    "reporter": [
+      "text",
+      "html",
+      "lcov"
+    ],
+    "exclude": [
+      "test/**",
+      "node_modules/**"
+    ],
+    "all": true,
+    "check-coverage": true,
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 80
+  },
+  "keywords": [
+    "PRC",
+    "eEHIC",
+    "QR Code",
+    "JWT",
+    "PDF Generator",
+    "Healthcare"
+  ],
+  "bugs": {
+    "url": "https://github.com/Flossed/prc-qr-generator/issues"
+  },
+  "homepage": "https://github.com/Flossed/prc-qr-generator#readme",
+  "dependencies": {
+    "@zandd/app-logger": "^1.1.1",
+    "ajv": "^8.12.0",
+    "ajv-formats": "^2.1.1",
+    "axios": "^1.6.2",
+    "base45": "^2.0.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "bootstrap": "^5.3.0",
+    "bootstrap-icons": "^1.10.5",
+    "connect-mongo": "^5.1.0",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-ejs-layouts": "^2.5.1",
+    "express-fileupload": "^1.5.1",
+    "express-session": "^1.18.2",
+    "express-validator": "^7.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "nconf": "^0.12.1",
+    "nodemailer": "^7.0.6",
+    "pako": "^2.1.0",
+    "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4",
+    "serve-favicon": "^2.5.0",
+    "uuid": "^9.0.1"
+  }
+}

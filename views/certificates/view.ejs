@@ -1,0 +1,485 @@
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center">
+                <a href="/certificates" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="mb-0">
+                        <i class="bi bi-key me-2"></i>
+                        <%= certificate.name %>
+                    </h3>
+                    <small class="text-muted">Certificate Details</small>
+                </div>
+            </div>
+            <div>
+                <% if (certificate.status === 'active') { %>
+                    <span class="badge bg-success fs-6">
+                        <i class="bi bi-check-circle me-1"></i>Active
+                    </span>
+                <% } else if (certificate.status === 'pending') { %>
+                    <span class="badge bg-warning fs-6">
+                        <i class="bi bi-clock me-1"></i>Pending
+                    </span>
+                <% } else if (certificate.status === 'revoked') { %>
+                    <span class="badge bg-danger fs-6">
+                        <i class="bi bi-x-circle me-1"></i>Revoked
+                    </span>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <!-- Certificate Information -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Certificate Information
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">Name:</dt>
+                            <dd class="col-sm-9"><%= certificate.name %></dd>
+
+                            <dt class="col-sm-3">Description:</dt>
+                            <dd class="col-sm-9">
+                                <%= certificate.description || 'No description provided' %>
+                            </dd>
+
+                            <dt class="col-sm-3">Purpose:</dt>
+                            <dd class="col-sm-9">
+                                <% if (certificate.purpose === 'prc-signing') { %>
+                                    <span class="badge bg-primary">PRC Document Signing</span>
+                                <% } else if (certificate.purpose === 'jwt-signing') { %>
+                                    <span class="badge bg-info">JWT Token Signing</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">General Purpose</span>
+                                <% } %>
+                            </dd>
+
+                            <dt class="col-sm-3">Key ID (Kid):</dt>
+                            <dd class="col-sm-9">
+                                <code class="small"><%= certificate.kid %></code>
+                                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="copyToClipboard('<%= certificate.kid %>')">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </dd>
+
+                            <dt class="col-sm-3">Algorithm:</dt>
+                            <dd class="col-sm-9">
+                                <span class="badge bg-info"><%= certificate.algorithm %></span>
+                            </dd>
+
+                            <dt class="col-sm-3">Key Size:</dt>
+                            <dd class="col-sm-9"><%= certificate.keySize %> bits</dd>
+
+                            <dt class="col-sm-3">Thumbprint:</dt>
+                            <dd class="col-sm-9">
+                                <code class="small"><%= certificate.thumbprint %></code>
+                                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="copyToClipboard('<%= certificate.thumbprint %>')">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </dd>
+
+                            <dt class="col-sm-3">Created:</dt>
+                            <dd class="col-sm-9">
+                                <%= new Date(certificate.createdAt).toLocaleString() %>
+                                <small class="text-muted">(<%= Math.ceil((new Date() - new Date(certificate.createdAt)) / (1000 * 60 * 60 * 24)) %> days ago)</small>
+                            </dd>
+
+                            <% if (certificate.expiresAt) { %>
+                                <dt class="col-sm-3">Expires:</dt>
+                                <dd class="col-sm-9">
+                                    <%= new Date(certificate.expiresAt).toLocaleString() %>
+                                    <% const daysLeft = Math.ceil((new Date(certificate.expiresAt) - new Date()) / (1000 * 60 * 60 * 24)); %>
+                                    <% if (daysLeft > 30) { %>
+                                        <small class="text-success">(<%= daysLeft %> days left)</small>
+                                    <% } else if (daysLeft > 0) { %>
+                                        <small class="text-warning">(<%= daysLeft %> days left)</small>
+                                    <% } else { %>
+                                        <small class="text-danger">(Expired)</small>
+                                    <% } %>
+                                </dd>
+                            <% } %>
+
+                            <dt class="col-sm-3">Usage Count:</dt>
+                            <dd class="col-sm-9">
+                                <%= certificate.usageCount || 0 %> times
+                                <% if (certificate.lastUsedAt) { %>
+                                    <small class="text-muted">
+                                        (last used <%= new Date(certificate.lastUsedAt).toLocaleDateString() %>)
+                                    </small>
+                                <% } %>
+                            </dd>
+
+                            <% if (certificate.tags && certificate.tags.length > 0) { %>
+                                <dt class="col-sm-3">Tags:</dt>
+                                <dd class="col-sm-9">
+                                    <% certificate.tags.forEach(tag => { %>
+                                        <span class="badge bg-light text-dark me-1"><%= tag %></span>
+                                    <% }); %>
+                                </dd>
+                            <% } %>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Public Key Information -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="bi bi-lock me-2"></i>
+                        Public Key Information
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Key Details:</h6>
+                                <dl class="row small">
+                                    <dt class="col-6">Format:</dt>
+                                    <dd class="col-6">PEM (PKCS#1)</dd>
+
+                                    <dt class="col-6">Type:</dt>
+                                    <dd class="col-6">RSA Public Key</dd>
+
+                                    <dt class="col-6">Size:</dt>
+                                    <dd class="col-6"><%= certificate.keySize %> bits</dd>
+
+                                    <dt class="col-6">Encoding:</dt>
+                                    <dd class="col-6">Base64</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Security Information:</h6>
+                                <dl class="row small">
+                                    <dt class="col-6">Hash Algorithm:</dt>
+                                    <dd class="col-6">
+                                        <% if (certificate.algorithm === 'RS256') { %>SHA-256
+                                        <% } else if (certificate.algorithm === 'RS384') { %>SHA-384
+                                        <% } else if (certificate.algorithm === 'RS512') { %>SHA-512
+                                        <% } %>
+                                    </dd>
+
+                                    <dt class="col-6">Padding:</dt>
+                                    <dd class="col-6">PKCS#1 v1.5</dd>
+
+                                    <dt class="col-6">Export Allowed:</dt>
+                                    <dd class="col-6">
+                                        <% if (certificate.allowExport) { %>
+                                            <span class="text-success"><i class="bi bi-check"></i> Yes</span>
+                                        <% } else { %>
+                                            <span class="text-danger"><i class="bi bi-x"></i> No</span>
+                                        <% } %>
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <% if (certificate.allowExport && certificate.publicKey) { %>
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label">Public Key (PEM Format):</label>
+                                <textarea class="form-control font-monospace" rows="10" readonly
+                                          style="font-size: 0.8rem;"><%= certificate.publicKey %></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="downloadPublicKey()">
+                                    <i class="bi bi-download me-1"></i>Download PEM
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="copyPublicKey()">
+                                    <i class="bi bi-clipboard me-1"></i>Copy to Clipboard
+                                </button>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions & Status -->
+            <div class="col-md-4">
+                <!-- Actions Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-gear me-2"></i>
+                        Actions
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <% if (certificate.status === 'active') { %>
+                                <a href="/prc/generate" class="btn btn-primary">
+                                    <i class="bi bi-qr-code me-2"></i>Use for PRC Generation
+                                </a>
+
+                                <button class="btn btn-outline-secondary" onclick="testCertificate()">
+                                    <i class="bi bi-play-circle me-2"></i>Test Certificate
+                                </button>
+
+                                <% if (certificate.allowExport) { %>
+                                    <button class="btn btn-outline-info" onclick="downloadPublicKey()">
+                                        <i class="bi bi-download me-2"></i>Download Public Key
+                                    </button>
+                                <% } %>
+
+                                <% if (user.role === 'admin') { %>
+                                    <hr>
+                                    <button class="btn btn-outline-warning" onclick="revokeCertificate()">
+                                        <i class="bi bi-x-circle me-2"></i>Revoke Certificate
+                                    </button>
+                                <% } %>
+                            <% } else if (certificate.status === 'pending') { %>
+                                <% if (user.role === 'admin') { %>
+                                    <button class="btn btn-success" onclick="activateCertificate()">
+                                        <i class="bi bi-check-circle me-2"></i>Activate Certificate
+                                    </button>
+                                <% } %>
+                                <p class="text-muted small mb-0">
+                                    This certificate is pending activation by an administrator.
+                                </p>
+                            <% } else if (certificate.status === 'revoked') { %>
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Certificate Revoked</strong><br>
+                                    This certificate has been revoked and cannot be used for signing.
+                                </div>
+                            <% } %>
+
+                            <% if (certificate.status !== 'active' || user.role === 'admin') { %>
+                                <hr>
+                                <button class="btn btn-outline-danger" onclick="deleteCertificate()">
+                                    <i class="bi bi-trash me-2"></i>Delete Certificate
+                                </button>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Statistics -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Usage Statistics
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h2 class="text-primary mb-0"><%= certificate.usageCount || 0 %></h2>
+                            <small class="text-muted">Total Signings</small>
+                        </div>
+
+                        <% if (certificate.lastUsedAt) { %>
+                            <div class="text-center mb-3">
+                                <div class="small text-muted">Last Used</div>
+                                <div><%= new Date(certificate.lastUsedAt).toLocaleDateString() %></div>
+                                <div class="small text-muted"><%= new Date(certificate.lastUsedAt).toLocaleTimeString() %></div>
+                            </div>
+                        <% } else { %>
+                            <div class="text-center text-muted">
+                                <i class="bi bi-clock" style="font-size: 2rem; opacity: 0.3;"></i>
+                                <p class="mt-2 mb-0 small">Never used</p>
+                            </div>
+                        <% } %>
+
+                        <hr>
+
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Health Score:</span>
+                                <span class="text-success">
+                                    <% const healthScore = certificate.status === 'active' ?
+                                       (certificate.expiresAt && new Date(certificate.expiresAt) < new Date() ? 0 : 100) :
+                                       (certificate.status === 'pending' ? 50 : 0); %>
+                                    <%= healthScore %>%
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 4px;">
+                                <div class="progress-bar <%= healthScore === 100 ? 'bg-success' : healthScore > 0 ? 'bg-warning' : 'bg-danger' %>"
+                                     style="width: <%= healthScore %>%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Info -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <i class="bi bi-shield-check me-2"></i>
+                        Security Status
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled small mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                Private key securely stored
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                eEHIC compliant Key ID format
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                SHA-256 thumbprint verified
+                            </li>
+                            <li class="mb-2">
+                                <% if (certificate.expiresAt && new Date(certificate.expiresAt) > new Date()) { %>
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Certificate within validity period
+                                <% } else if (certificate.expiresAt) { %>
+                                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                                    Certificate expired
+                                <% } else { %>
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    No expiry date set
+                                <% } %>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Copy to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show temporary success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        btn.classList.add('text-success');
+
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('text-success');
+        }, 1000);
+    }).catch(function(err) {
+        alert('Failed to copy to clipboard');
+    });
+}
+
+// Download public key
+function downloadPublicKey() {
+    fetch(`/certificates/<%= certificate._id %>/download`)
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            }
+            throw new Error('Download failed');
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `<%= certificate.name.replace(/[^a-zA-Z0-9]/g, '_') %>_public.pem`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Download error:', error);
+            alert('Failed to download public key. Please try again.');
+        });
+}
+
+// Copy public key
+function copyPublicKey() {
+    const publicKeyText = document.querySelector('textarea').value;
+    copyToClipboard(publicKeyText);
+}
+
+// Test certificate
+function testCertificate() {
+    fetch(`/certificates/<%= certificate._id %>/test`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Certificate test successful!\n\n' +
+                  'Test JWT signed and verified successfully.\n' +
+                  'Certificate is ready for use.');
+        } else {
+            alert('Certificate test failed: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Test error:', error);
+        alert('An error occurred during certificate test. Please try again.');
+    });
+}
+
+// Activate certificate
+function activateCertificate() {
+    if (!confirm('Are you sure you want to activate this certificate?')) {
+        return;
+    }
+
+    fetch(`/certificates/<%= certificate._id %>/activate`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Certificate activated successfully.');
+            window.location.reload();
+        } else {
+            alert('Failed to activate certificate: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Activation error:', error);
+        alert('An error occurred while activating the certificate. Please try again.');
+    });
+}
+
+// Revoke certificate
+function revokeCertificate() {
+    if (!confirm('Are you sure you want to revoke this certificate? This action cannot be undone and will prevent the certificate from being used for signing.')) {
+        return;
+    }
+
+    fetch(`/certificates/<%= certificate._id %>/revoke`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Certificate revoked successfully.');
+            window.location.reload();
+        } else {
+            alert('Failed to revoke certificate: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Revoke error:', error);
+        alert('An error occurred while revoking the certificate. Please try again.');
+    });
+}
+
+// Delete certificate
+function deleteCertificate() {
+    if (!confirm('Are you sure you want to delete this certificate? This action cannot be undone and will affect any documents signed with this certificate.')) {
+        return;
+    }
+
+    fetch(`/certificates/<%= certificate._id %>`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Certificate deleted successfully.');
+            window.location.href = '/certificates';
+        } else {
+            alert('Failed to delete certificate: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Delete error:', error);
+        alert('An error occurred while deleting the certificate. Please try again.');
+    });
+}
+</script>

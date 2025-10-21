@@ -1,0 +1,80 @@
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark text-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                404 - Page Not Found
+            </div>
+            <div class="card-body text-center p-5">
+                <i class="bi bi-question-circle" style="font-size: 5rem; color: #ffc107;"></i>
+
+                <h3 class="mt-4 mb-3">Oops! Page Not Found</h3>
+
+                <p class="text-muted mb-4">
+                    The page you're looking for doesn't exist or has been moved.
+                </p>
+
+                <div class="alert alert-warning" role="alert">
+                    <strong>Requested URL:</strong><br>
+                    <code><%= url %></code>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+                    <a href="/" class="btn btn-primary">
+                        <i class="bi bi-house-door me-2"></i>
+                        Go to Home
+                    </a>
+                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Go Back
+                    </button>
+                </div>
+
+                <hr class="my-4">
+
+                <h5 class="mb-3">Quick Links</h5>
+                <div class="list-group">
+                    <% if (locals.user) { %>
+                        <a href="/prc/dashboard" class="list-group-item list-group-item-action">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Dashboard
+                        </a>
+                        <a href="/prc/generate" class="list-group-item list-group-item-action">
+                            <i class="bi bi-file-earmark-plus me-2"></i>
+                            Generate PRC
+                        </a>
+                        <a href="/certificates" class="list-group-item list-group-item-action">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Certificates
+                        </a>
+                    <% } else { %>
+                        <a href="/auth/login" class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Login
+                        </a>
+                        <a href="/auth/register" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Register
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>
+                    If you believe this is an error, please contact support.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group-item-action {
+        transition: all 0.2s ease;
+    }
+
+    .list-group-item-action:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+    }
+</style>
