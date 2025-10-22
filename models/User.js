@@ -52,8 +52,8 @@ const userSchema = new mongoose.Schema({
     },
     country: {
         type: String,
-        enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'],
-        required: function() { return this.role === 'issuer'; }
+        enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK']
+        // Not required during registration - populated through institution request workflow
     },
     countryOfResidence: {
         type: String,
@@ -82,8 +82,8 @@ const userSchema = new mongoose.Schema({
         trim: true,
         minlength: 4,
         maxlength: 10,
-        required: function() { return this.role === 'issuer'; },
         match: [/^\d+$/, 'Institution ID must contain only digits']
+        // Not required during registration - populated through institution request workflow
     },
     isActive: {
         type: Boolean,

@@ -11,6 +11,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "updateVersions": "node updateVersions",
+    "setup:domain-owner": "node scripts/createDomainOwner.js",
     "test": "mocha --recursive --timeout 10000 --exit",
     "test:watch": "mocha --recursive --watch",
     "test:coverage": "nyc mocha --recursive",

@@ -216,33 +216,78 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <% if (typeof user !== 'undefined' && user) { %>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/prc/dashboard">
-                                <i class="bi bi-speedometer2 me-1"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/prc/generate">
-                                <i class="bi bi-qr-code me-1"></i>
-                                Generate PRC
-                            </a>
-                        </li>
-                        <% if (user.role === 'issuer' || user.role === 'admin') { %>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/certificates">
-                                    <i class="bi bi-key me-1"></i>
-                                    Certificates
-                                </a>
-                            </li>
-                        <% } %>
                         <% if (user.role === 'admin') { %>
+                            <!-- Domain Owner Navigation -->
                             <li class="nav-item">
-                                <a class="nav-link" href="/admin">
-                                    <i class="bi bi-gear me-1"></i>
-                                    Admin
+                                <a class="nav-link" href="/admin/dashboard">
+                                    <i class="bi bi-speedometer2 me-1"></i>
+                                    Dashboard
                                 </a>
                             </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="institutionsDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-hospital me-1"></i>
+                                    Institutions
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/institution-request/pending-creations">
+                                        <i class="bi bi-shield-exclamation me-2"></i>Pending Creations
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/admin/institutions">
+                                        <i class="bi bi-building me-2"></i>All Institutions
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/issuers">
+                                        <i class="bi bi-people me-2"></i>All Issuers
+                                    </a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/reports">
+                                    <i class="bi bi-graph-up me-1"></i>
+                                    Reports
+                                </a>
+                            </li>
+                        <% } else { %>
+                            <!-- Regular User/Issuer Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/prc/dashboard">
+                                    <i class="bi bi-speedometer2 me-1"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/prc/generate">
+                                    <i class="bi bi-qr-code me-1"></i>
+                                    Generate PRC
+                                </a>
+                            </li>
+                            <% if (user.role === 'issuer') { %>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/certificates">
+                                        <i class="bi bi-key me-1"></i>
+                                        Certificates
+                                    </a>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="institutionsDropdown" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-hospital me-1"></i>
+                                        Institutions
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="/institution-request/choose">
+                                            <i class="bi bi-plus-circle me-2"></i>Join/Create Institution
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="/institution-request/my-requests">
+                                            <i class="bi bi-file-text me-2"></i>My Requests
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="/institution-request/pending-joins">
+                                            <i class="bi bi-clock-history me-2"></i>Pending Join Requests
+                                        </a></li>
+                                    </ul>
+                                </li>
+                            <% } %>
                         <% } %>
                     <% } %>
                 </ul>

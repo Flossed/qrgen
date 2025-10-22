@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const PRC = require('../models/PRC');
 const Certificate = require('../models/Certificate');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, blockAdminFromPRC } = require('../middleware/auth');
 const { checkOnboardingComplete } = require('../middleware/onboarding');
 const { body, validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
@@ -15,6 +15,10 @@ const JWTService = require('../services/jwtService');
 const QRCodeService = require('../services/qrCodeService');
 const PDFService = require('../services/pdfService');
 const EmailService = require('../services/emailService');
+
+// Apply blockAdminFromPRC middleware to all routes in this router
+// Domain Owners cannot generate or request PRCs
+router.use(blockAdminFromPRC);
 
 // Dashboard page (explicit route)
 router.get('/dashboard', isAuthenticated, async (req, res) => {

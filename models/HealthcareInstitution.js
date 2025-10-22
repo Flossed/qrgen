@@ -5,7 +5,7 @@ const healthcareInstitutionSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        maxlength: 100
+        maxlength: 21  // eEHIC schema requirement
     },
     country: {
         type: String,
@@ -25,9 +25,32 @@ const healthcareInstitutionSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    administrators: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    address: {
+        type: String,
+        trim: true,
+        maxlength: 200
+    },
+    contactEmail: {
+        type: String,
+        trim: true,
+        lowercase: true
+    },
+    contactPhone: {
+        type: String,
+        trim: true,
+        maxlength: 50
+    },
     isActive: {
         type: Boolean,
         default: true
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     },
     createdAt: {
         type: Date,
@@ -58,9 +81,27 @@ healthcareInstitutionSchema.methods.generatePersonalId = async function(country)
     return `${baseId}${padding}${sequenceStr}`;
 };
 
+// Method to check if user is an administrator
+healthcareInstitutionSchema.methods.isAdministrator = function(userId) {
+    return this.administrators.some(adminId => adminId.toString() === userId.toString());
+};
+
+// Method to add administrator
+healthcareInstitutionSchema.methods.addAdministrator = async function(userId) {
+    if (!this.isAdministrator(userId)) {
+        this.administrators.push(userId);
+        await this.save();
+    }
+};
+
 // Static method to find institutions by country
 healthcareInstitutionSchema.statics.findByCountry = function(country) {
     return this.find({ country: country, isActive: true }).sort({ name: 1 });
+};
+
+// Static method to find institutions where user is admin
+healthcareInstitutionSchema.statics.findByAdministrator = function(userId) {
+    return this.find({ administrators: userId, isActive: true }).sort({ name: 1 });
 };
 
 const HealthcareInstitution = mongoose.model('HealthcareInstitution', healthcareInstitutionSchema);

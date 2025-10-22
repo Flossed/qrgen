@@ -154,6 +154,12 @@ app.use('/prc', prcRoutes);
 
 // Root redirect
 app.get('/', (req, res) => {
+    if (req.session && req.session.userId) {
+        // Redirect based on user role (will be populated by loadUser middleware)
+        if (req.user && req.user.role === 'admin') {
+            return res.redirect('/admin/dashboard');
+        }
+    }
     res.redirect('/prc/dashboard');
 });
 
@@ -166,6 +172,16 @@ app.use('/certificates', certRoutes);
 appLogger.trace('Registering institution routes');
 const institutionRoutes = require('./routes/institutionRoutes');
 app.use('/institution', institutionRoutes);
+
+// Institution request routes
+appLogger.trace('Registering institution request routes');
+const institutionRequestRoutes = require('./routes/institutionRequestRoutes');
+app.use('/institution-request', institutionRequestRoutes);
+
+// Admin routes (Domain Owner)
+appLogger.trace('Registering admin routes');
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

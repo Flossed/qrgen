@@ -1,0 +1,104 @@
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-hospital me-2"></i>Institution Registration
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i><%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i><%= success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <p class="lead mb-4">
+                    As an issuer, you can either join an existing healthcare institution or request to create a new one.
+                </p>
+
+                <!-- Current Institutions -->
+                <% if (userInstitutions && userInstitutions.length > 0) { %>
+                    <div class="alert alert-info mb-4">
+                        <h6><i class="bi bi-building me-2"></i>Your Institutions</h6>
+                        <% userInstitutions.forEach(institution => { %>
+                            <div class="mb-2">
+                                <strong><%= institution.name %></strong> (<%= institution.country %>) - ID: <%= institution.institutionId %>
+                                <span class="badge bg-success ms-2">Administrator</span>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+
+                <!-- Pending Requests -->
+                <% if (pendingRequests && pendingRequests.length > 0) { %>
+                    <div class="alert alert-warning mb-4">
+                        <h6><i class="bi bi-clock-history me-2"></i>Pending Requests</h6>
+                        <% pendingRequests.forEach(request => { %>
+                            <div class="mb-2">
+                                <% if (request.requestType === 'join') { %>
+                                    Request to join <strong><%= request.institutionId.name %></strong> (<%= request.institutionId.country %>)
+                                <% } else { %>
+                                    Request to create <strong><%= request.institutionName %></strong> (<%= request.institutionCountry %>)
+                                <% } %>
+                                <span class="badge bg-warning ms-2">Pending</span>
+                            </div>
+                        <% }); %>
+                        <a href="/institution-request/my-requests" class="btn btn-sm btn-outline-primary mt-2">
+                            View All My Requests
+                        </a>
+                    </div>
+                <% } %>
+
+                <!-- Options -->
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary">
+                            <div class="card-body text-center">
+                                <i class="bi bi-building-add text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Join Existing Institution</h5>
+                                <p class="card-text text-muted">
+                                    Select from a list of registered healthcare institutions.
+                                    An institution administrator will review your request.
+                                </p>
+                                <a href="/institution-request/join" class="btn btn-primary">
+                                    <i class="bi bi-building me-2"></i>Browse Institutions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <i class="bi bi-plus-circle text-success" style="font-size: 3rem;"></i>
+                                <h5 class="card-title mt-3">Create New Institution</h5>
+                                <p class="card-text text-muted">
+                                    Request to register a new healthcare institution.
+                                    A system administrator will review your request.
+                                </p>
+                                <a href="/institution-request/create" class="btn btn-success">
+                                    <i class="bi bi-plus-circle me-2"></i>Create Institution
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                    <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

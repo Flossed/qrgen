@@ -618,6 +618,697 @@ Generated on: ${new Date().toLocaleString()}
     }
 
     /**
+     * Send institution join request notification to administrators
+     * @param {Array} admins - Array of administrator user objects
+     * @param {Object} requester - User who requested to join
+     * @param {Object} institution - Institution object
+     * @param {string} justification - Requester's justification
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendInstitutionJoinRequest(admins, requester, institution, justification) {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            if (!admins || admins.length === 0) {
+                throw new Error('No administrators found');
+            }
+
+            const adminEmails = admins.map(admin => admin.email).join(', ');
+            const reviewUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/institution-request/pending-joins`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: adminEmails,
+                subject: `New Join Request - ${institution.name}`,
+                text: `
+Dear Administrator,
+
+A new request to join your institution has been submitted.
+
+Institution: ${institution.name} (${institution.country})
+Institution ID: ${institution.institutionId}
+
+Requester Information:
+Name: ${requester.firstName} ${requester.lastName}
+Email: ${requester.email}
+
+Justification:
+${justification}
+
+Please review and approve or reject this request at:
+${reviewUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Join Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0066CC; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #0066CC; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>New Institution Join Request</h1>
+    </div>
+    <div class="content">
+        <p>Dear Administrator,</p>
+        <p>A new request to join your institution has been submitted.</p>
+        <div class="info-box">
+            <h3>Institution</h3>
+            <p><strong>${institution.name}</strong> (${institution.country})<br>
+            Institution ID: ${institution.institutionId}</p>
+        </div>
+        <div class="info-box">
+            <h3>Requester Information</h3>
+            <p><strong>Name:</strong> ${requester.firstName} ${requester.lastName}<br>
+            <strong>Email:</strong> ${requester.email}</p>
+        </div>
+        <div class="info-box">
+            <h3>Justification</h3>
+            <p>${justification}</p>
+        </div>
+        <p style="text-align: center;">
+            <a href="${reviewUrl}" class="button">Review Request</a>
+        </p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Institution join request email sent successfully', {
+                messageId: result.messageId,
+                recipients: adminEmails,
+                institutionId: institution._id
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipients: adminEmails
+            };
+
+        } catch (error) {
+            logger.error('Join request email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send join request email: ${error.message}`);
+        }
+    }
+
+    /**
+     * Send join approval notification to requester
+     * @param {Object} requester - User who requested to join
+     * @param {Object} institution - Institution object
+     * @param {string} notes - Optional approval notes
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendJoinApproval(requester, institution, notes = '') {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            const dashboardUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/prc/dashboard`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: requester.email,
+                subject: `Join Request Approved - ${institution.name}`,
+                text: `
+Dear ${requester.firstName} ${requester.lastName},
+
+Your request to join ${institution.name} has been approved!
+
+Institution: ${institution.name} (${institution.country})
+Institution ID: ${institution.institutionId}
+
+You are now an administrator of this institution and can start generating PRCs.
+
+${notes ? `Administrator Notes:\n${notes}\n\n` : ''}
+Access your dashboard at:
+${dashboardUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Request Approved</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #28a745; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .success-badge { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Join Request Approved</h1>
+    </div>
+    <div class="content">
+        <p>Dear <strong>${requester.firstName} ${requester.lastName}</strong>,</p>
+        <div class="success-badge">
+            <strong>Congratulations!</strong> Your request to join ${institution.name} has been approved.
+        </div>
+        <div class="info-box">
+            <h3>Institution Details</h3>
+            <p><strong>${institution.name}</strong> (${institution.country})<br>
+            Institution ID: ${institution.institutionId}</p>
+        </div>
+        <p>You are now an administrator of this institution and can start generating PRCs for your patients.</p>
+        ${notes ? `<div class="info-box"><h3>Administrator Notes</h3><p>${notes}</p></div>` : ''}
+        <p style="text-align: center;">
+            <a href="${dashboardUrl}" class="button">Go to Dashboard</a>
+        </p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Join approval email sent successfully', {
+                messageId: result.messageId,
+                recipient: requester.email,
+                institutionId: institution._id
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipient: requester.email
+            };
+
+        } catch (error) {
+            logger.error('Join approval email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send join approval email: ${error.message}`);
+        }
+    }
+
+    /**
+     * Send join rejection notification to requester
+     * @param {Object} requester - User who requested to join
+     * @param {Object} institution - Institution object
+     * @param {string} reason - Rejection reason
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendJoinRejection(requester, institution, reason) {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            const requestsUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/institution-request/my-requests`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: requester.email,
+                subject: `Join Request Declined - ${institution.name}`,
+                text: `
+Dear ${requester.firstName} ${requester.lastName},
+
+Your request to join ${institution.name} has been declined.
+
+Institution: ${institution.name} (${institution.country})
+Institution ID: ${institution.institutionId}
+
+Reason for Rejection:
+${reason}
+
+If you have questions or would like to discuss this decision, please contact the institution directly.
+
+You can view all your requests at:
+${requestsUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Request Declined</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #0066CC; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .warning-box { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; border: 1px solid #f5c6cb; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Join Request Declined</h1>
+    </div>
+    <div class="content">
+        <p>Dear <strong>${requester.firstName} ${requester.lastName}</strong>,</p>
+        <p>Your request to join ${institution.name} has been declined.</p>
+        <div class="info-box">
+            <h3>Institution</h3>
+            <p><strong>${institution.name}</strong> (${institution.country})<br>
+            Institution ID: ${institution.institutionId}</p>
+        </div>
+        <div class="warning-box">
+            <h3>Reason for Rejection</h3>
+            <p>${reason}</p>
+        </div>
+        <p>If you have questions or would like to discuss this decision, please contact the institution directly.</p>
+        <p style="text-align: center;">
+            <a href="${requestsUrl}" class="button">View My Requests</a>
+        </p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Join rejection email sent successfully', {
+                messageId: result.messageId,
+                recipient: requester.email,
+                institutionId: institution._id
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipient: requester.email
+            };
+
+        } catch (error) {
+            logger.error('Join rejection email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send join rejection email: ${error.message}`);
+        }
+    }
+
+    /**
+     * Send institution creation request notification to system administrators
+     * @param {Array} systemAdmins - Array of system administrator user objects
+     * @param {Object} requester - User who requested to create institution
+     * @param {Object} institutionData - Requested institution data
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendInstitutionCreationRequest(systemAdmins, requester, institutionData) {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            if (!systemAdmins || systemAdmins.length === 0) {
+                throw new Error('No system administrators found');
+            }
+
+            const adminEmails = systemAdmins.map(admin => admin.email).join(', ');
+            const reviewUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/institution-request/pending-creations`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: adminEmails,
+                subject: `New Institution Creation Request - ${institutionData.institutionName}`,
+                text: `
+Dear System Administrator,
+
+A new request to create an institution has been submitted.
+
+Requested Institution:
+Name: ${institutionData.institutionName}
+Country: ${institutionData.institutionCountry}
+${institutionData.institutionAddress ? `Address: ${institutionData.institutionAddress}\n` : ''}${institutionData.institutionContact ? `Contact: ${institutionData.institutionContact}\n` : ''}
+Requester Information:
+Name: ${requester.firstName} ${requester.lastName}
+Email: ${requester.email}
+
+Justification:
+${institutionData.justification}
+
+Please review this request and assign an Institution ID (4-10 digits) if approved:
+${reviewUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Institution Creation Request</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>New Institution Creation Request</h1>
+    </div>
+    <div class="content">
+        <p>Dear System Administrator,</p>
+        <p>A new request to create an institution has been submitted.</p>
+        <div class="info-box">
+            <h3>Requested Institution</h3>
+            <p><strong>Name:</strong> ${institutionData.institutionName}<br>
+            <strong>Country:</strong> ${institutionData.institutionCountry}
+            ${institutionData.institutionAddress ? `<br><strong>Address:</strong> ${institutionData.institutionAddress}` : ''}
+            ${institutionData.institutionContact ? `<br><strong>Contact:</strong> ${institutionData.institutionContact}` : ''}
+            </p>
+        </div>
+        <div class="info-box">
+            <h3>Requester Information</h3>
+            <p><strong>Name:</strong> ${requester.firstName} ${requester.lastName}<br>
+            <strong>Email:</strong> ${requester.email}</p>
+        </div>
+        <div class="info-box">
+            <h3>Justification</h3>
+            <p>${institutionData.justification}</p>
+        </div>
+        <p style="text-align: center;">
+            <a href="${reviewUrl}" class="button">Review Request</a>
+        </p>
+        <p><small><em>Please assign an Institution ID (4-10 digits) if approved.</em></small></p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Institution creation request email sent successfully', {
+                messageId: result.messageId,
+                recipients: adminEmails
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipients: adminEmails
+            };
+
+        } catch (error) {
+            logger.error('Creation request email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send creation request email: ${error.message}`);
+        }
+    }
+
+    /**
+     * Send creation approval notification to requester
+     * @param {Object} requester - User who requested to create institution
+     * @param {Object} institution - Created institution object
+     * @param {string} notes - Optional approval notes
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendCreationApproval(requester, institution, notes = '') {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            const dashboardUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/prc/dashboard`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: requester.email,
+                subject: `Institution Creation Approved - ${institution.name}`,
+                text: `
+Dear ${requester.firstName} ${requester.lastName},
+
+Your request to create ${institution.name} has been approved!
+
+Institution: ${institution.name} (${institution.country})
+Assigned Institution ID: ${institution.institutionId}
+
+You have been assigned as the administrator of this institution and can now start generating PRCs.
+
+${notes ? `System Administrator Notes:\n${notes}\n\n` : ''}
+Access your dashboard at:
+${dashboardUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institution Creation Approved</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #28a745; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .success-badge { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; }
+        .highlight { background-color: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Institution Creation Approved</h1>
+    </div>
+    <div class="content">
+        <p>Dear <strong>${requester.firstName} ${requester.lastName}</strong>,</p>
+        <div class="success-badge">
+            <strong>Congratulations!</strong> Your request to create ${institution.name} has been approved.
+        </div>
+        <div class="info-box">
+            <h3>Institution Details</h3>
+            <p><strong>${institution.name}</strong> (${institution.country})</p>
+            <div class="highlight">
+                <strong>Assigned Institution ID:</strong> <span style="font-size: 1.2em; color: #155724;">${institution.institutionId}</span>
+            </div>
+        </div>
+        <p>You have been assigned as the administrator of this institution and can now start generating PRCs for your patients.</p>
+        ${notes ? `<div class="info-box"><h3>System Administrator Notes</h3><p>${notes}</p></div>` : ''}
+        <p style="text-align: center;">
+            <a href="${dashboardUrl}" class="button">Go to Dashboard</a>
+        </p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Creation approval email sent successfully', {
+                messageId: result.messageId,
+                recipient: requester.email,
+                institutionId: institution._id
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipient: requester.email
+            };
+
+        } catch (error) {
+            logger.error('Creation approval email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send creation approval email: ${error.message}`);
+        }
+    }
+
+    /**
+     * Send creation rejection notification to requester
+     * @param {Object} requester - User who requested to create institution
+     * @param {string} institutionName - Name of requested institution
+     * @param {string} reason - Rejection reason
+     * @returns {Promise<Object>} - Email sending result
+     */
+    async sendCreationRejection(requester, institutionName, reason) {
+        try {
+            if (!this.transporter) {
+                throw new Error('Email service not available. Please check configuration.');
+            }
+
+            const requestsUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/institution-request/my-requests`;
+
+            const mailOptions = {
+                from: {
+                    name: process.env.FROM_NAME || 'PRC Generator System',
+                    address: process.env.FROM_EMAIL || 'noreply@prcgenerator.eu'
+                },
+                to: requester.email,
+                subject: `Institution Creation Request Declined - ${institutionName}`,
+                text: `
+Dear ${requester.firstName} ${requester.lastName},
+
+Your request to create ${institutionName} has been declined by the system administrator.
+
+Reason for Rejection:
+${reason}
+
+If you have questions or would like to discuss this decision, please contact the system administrator.
+
+You can view all your requests at:
+${requestsUrl}
+
+Best regards,
+PRC Generator System
+
+---
+This email was generated automatically. Please do not reply to this email.
+Generated on: ${new Date().toLocaleString()}
+                `.trim(),
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institution Creation Request Declined</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { background-color: #f9f9f9; padding: 20px; border: 1px solid #ddd; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #0066CC; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .info-box { background-color: white; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .warning-box { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin: 15px 0; border: 1px solid #f5c6cb; }
+        .footer { background-color: #333; color: white; padding: 15px; text-align: center; font-size: 12px; border-radius: 0 0 5px 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Institution Creation Request Declined</h1>
+    </div>
+    <div class="content">
+        <p>Dear <strong>${requester.firstName} ${requester.lastName}</strong>,</p>
+        <p>Your request to create <strong>${institutionName}</strong> has been declined by the system administrator.</p>
+        <div class="warning-box">
+            <h3>Reason for Rejection</h3>
+            <p>${reason}</p>
+        </div>
+        <p>If you have questions or would like to discuss this decision, please contact the system administrator.</p>
+        <p style="text-align: center;">
+            <a href="${requestsUrl}" class="button">View My Requests</a>
+        </p>
+        <p>Best regards,<br><strong>PRC Generator System</strong></p>
+    </div>
+    <div class="footer">
+        <p>This email was generated automatically. Please do not reply to this email.</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+</body>
+</html>
+                `.trim()
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+
+            logger.debug('Creation rejection email sent successfully', {
+                messageId: result.messageId,
+                recipient: requester.email
+            });
+
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipient: requester.email
+            };
+
+        } catch (error) {
+            logger.error('Creation rejection email sending error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to send creation rejection email: ${error.message}`);
+        }
+    }
+
+    /**
      * Get country name from country code
      */
     getCountryName(countryCode) {

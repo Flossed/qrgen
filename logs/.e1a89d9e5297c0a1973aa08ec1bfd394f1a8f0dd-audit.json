@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\.e1a89d9e5297c0a1973aa08ec1bfd394f1a8f0dd-audit.json",
+    "files": [
+        {
+            "date": 1761036838015,
+            "name": "E:\\_Applications\\__ZNDPRODS\\qrgen\\logs\\InstitutionRequestRoutes-2025-10-21.log",
+            "hash": "5bceadb59b1dd9eae63896a6722bc65c267266a7413f27ebd9084b3db2584f45"
+        }
+    ],
+    "hashType": "sha256"
+}

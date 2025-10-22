@@ -50,9 +50,15 @@
                     <% } %>
 
                     <% if (typeof user !== 'undefined' && user) { %>
-                        <a href="/prc/dashboard" class="btn btn-success">
-                            <i class="bi bi-house me-2"></i>Dashboard
-                        </a>
+                        <% if (user.role === 'admin') { %>
+                            <a href="/admin/dashboard" class="btn btn-success">
+                                <i class="bi bi-house me-2"></i>Dashboard
+                            </a>
+                        <% } else { %>
+                            <a href="/prc/dashboard" class="btn btn-success">
+                                <i class="bi bi-house me-2"></i>Dashboard
+                            </a>
+                        <% } %>
                     <% } else { %>
                         <a href="/" class="btn btn-success">
                             <i class="bi bi-house me-2"></i>Home

@@ -198,17 +198,7 @@ router.post('/register', [
         .trim(),
     body('role')
         .isIn(['user', 'issuer'])
-        .withMessage('Invalid role selected'),
-    body('country')
-        .if(body('role').equals('issuer'))
-        .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
-        .withMessage('Please select a valid country'),
-    body('institutionId')
-        .if(body('role').equals('issuer'))
-        .isLength({ min: 4, max: 10 })
-        .withMessage('Institution ID must be between 4 and 10 characters')
-        .matches(/^\d+$/)
-        .withMessage('Institution ID must contain only digits')
+        .withMessage('Invalid role selected')
 ], async (req, res) => {
     logEntry('POST /auth/register', { username: req.body.username, email: req.body.email, role: req.body.role }, logger);
 
@@ -230,9 +220,7 @@ router.post('/register', [
             firstName,
             lastName,
             organization,
-            role,
-            country,
-            institutionId
+            role
         } = req.body;
 
         logger.debug('Registration data validated', { username, email, role });
@@ -270,14 +258,7 @@ router.post('/register', [
             role
         };
 
-        // Add issuer-specific fields if role is issuer
-        if (role === 'issuer') {
-            userData.country = country;
-            userData.institutionId = institutionId;
-            logger.debug('Adding issuer fields', { country, institutionId });
-        }
-
-        logger.debug('Creating new user');
+        logger.debug('Creating new user', { role });
         const user = new User(userData);
         await user.save();
 
