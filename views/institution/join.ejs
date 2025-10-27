@@ -1,0 +1,126 @@
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-building-add me-2"></i>Join Existing Institution
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i><%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <p class="text-muted mb-4">
+                    Select a healthcare institution to join. An administrator of the selected institution will review your request.
+                </p>
+
+                <% if (institutions.length === 0) { %>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        No active healthcare institutions found. Please create a new institution instead.
+                    </div>
+                <% } else { %>
+                    <!-- Group institutions by country -->
+                    <%
+                    const grouped = {};
+                    institutions.forEach(inst => {
+                        if (!grouped[inst.country]) grouped[inst.country] = [];
+                        grouped[inst.country].push(inst);
+                    });
+                    %>
+
+                    <div class="accordion" id="institutionAccordion">
+                        <% Object.keys(grouped).sort().forEach((country, index) => { %>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button <%= index !== 0 ? 'collapsed' : '' %>" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#country-<%= country %>">
+                                        <strong><%= country %></strong>
+                                        <span class="badge bg-primary ms-2"><%= grouped[country].length %></span>
+                                    </button>
+                                </h2>
+                                <div id="country-<%= country %>" class="accordion-collapse collapse <%= index === 0 ? 'show' : '' %>"
+                                     data-bs-parent="#institutionAccordion">
+                                    <div class="accordion-body">
+                                        <% grouped[country].forEach(institution => { %>
+                                            <div class="card mb-3">
+                                                <div class="card-body">
+                                                    <div class="row align-items-center">
+                                                        <div class="col-md-8">
+                                                            <h6 class="mb-2">
+                                                                <i class="bi bi-building me-2"></i><%= institution.name %>
+                                                            </h6>
+                                                            <p class="mb-1 text-muted">
+                                                                <small>
+                                                                    <strong>Institution ID:</strong> <%= institution.institutionId %><br>
+                                                                    <strong>Country:</strong> <%= institution.country %>
+                                                                    <% if (institution.address) { %><br><strong>Address:</strong> <%= institution.address %><% } %>
+                                                                </small>
+                                                            </p>
+                                                        </div>
+                                                        <div class="col-md-4 text-end">
+                                                            <button type="button" class="btn btn-primary"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#joinModal-<%= institution._id %>">
+                                                                <i class="bi bi-send me-1"></i>Request to Join
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Join Modal -->
+                                            <div class="modal fade" id="joinModal-<%= institution._id %>" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Join <%= institution.name %></h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <form action="/institution-request/join" method="POST">
+                                                            <div class="modal-body">
+                                                                <input type="hidden" name="institutionId" value="<%= institution._id %>">
+                                                                <div class="mb-3">
+                                                                    <label for="justification-<%= institution._id %>" class="form-label">
+                                                                        Justification <span class="text-danger">*</span>
+                                                                    </label>
+                                                                    <textarea class="form-control" id="justification-<%= institution._id %>"
+                                                                              name="justification" rows="4" required
+                                                                              minlength="10" maxlength="500"
+                                                                              placeholder="Please explain why you want to join this institution..."></textarea>
+                                                                    <small class="form-text text-muted">
+                                                                        Between 10 and 500 characters
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary">
+                                                                    <i class="bi bi-send me-1"></i>Submit Request
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% }); %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+
+                <div class="mt-4">
+                    <a href="/institution-request/choose" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

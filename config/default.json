@@ -6,7 +6,7 @@
     "author": "Daniel S .A. Khan"
   },
   "server": {
-    "port": 3000,
+    "port": 4400,
     "host": "localhost"
   },
   "database": {

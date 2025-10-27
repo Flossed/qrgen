@@ -1,0 +1,1 @@
+- please always comply with the schemas\schema-prc-v1.json defintions of data concerning the information for the citizen. please let me know if you need a mapping as the field are named differnt in the schema, and are not human readable.

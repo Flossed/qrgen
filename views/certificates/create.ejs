@@ -8,7 +8,7 @@
             </a>
             <h3 class="mb-0">
                 <i class="bi bi-plus-circle me-2"></i>
-                Create New RSA Certificate
+                Create New Certificate
             </h3>
         </div>
 
@@ -20,7 +20,7 @@
             </div>
             <div class="card-body">
                 <p class="text-muted mb-4">
-                    Create a new RSA certificate for signing JWT tokens. The certificate will be generated
+                    Create a new RSA or Elliptic Curve (EC) certificate for signing JWT tokens. The certificate will be generated
                     according to eEHIC specifications with proper Key ID (Kid) format and SHA-256 thumbprint.
                 </p>
 
@@ -70,7 +70,30 @@
                             </h6>
 
                             <div class="form-floating mb-3">
-                                <select class="form-select" id="keySize" name="keySize" required>
+                                <select class="form-select" id="algorithm" name="algorithm" required>
+                                    <option value="">Select signing algorithm</option>
+                                    <optgroup label="RSA Algorithms">
+                                        <option value="RS256" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS256' ? 'selected' : 'selected' %>>
+                                            RS256 (SHA-256 with RSA)
+                                        </option>
+                                        <option value="RS384" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS384' ? 'selected' : '' %>>
+                                            RS384 (SHA-384 with RSA)
+                                        </option>
+                                        <option value="RS512" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS512' ? 'selected' : '' %>>
+                                            RS512 (SHA-512 with RSA)
+                                        </option>
+                                    </optgroup>
+                                    <optgroup label="Elliptic Curve Algorithms">
+                                        <option value="ES256" <%= typeof formData !== 'undefined' && formData.algorithm === 'ES256' ? 'selected' : '' %>>
+                                            ES256 (SHA-256 with ECDSA P-256)
+                                        </option>
+                                    </optgroup>
+                                </select>
+                                <label for="algorithm">Signing Algorithm *</label>
+                            </div>
+
+                            <div class="form-floating mb-3" id="keySizeContainer">
+                                <select class="form-select" id="keySize" name="keySize">
                                     <option value="">Select key size</option>
                                     <option value="2048" <%= typeof formData !== 'undefined' && formData.keySize === '2048' ? 'selected' : 'selected' %>>
                                         2048 bits (Standard)
@@ -85,20 +108,11 @@
                                 <label for="keySize">RSA Key Size *</label>
                             </div>
 
-                            <div class="form-floating mb-3">
-                                <select class="form-select" id="algorithm" name="algorithm" required>
-                                    <option value="">Select signing algorithm</option>
-                                    <option value="RS256" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS256' ? 'selected' : 'selected' %>>
-                                        RS256 (SHA-256 with RSA)
-                                    </option>
-                                    <option value="RS384" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS384' ? 'selected' : '' %>>
-                                        RS384 (SHA-384 with RSA)
-                                    </option>
-                                    <option value="RS512" <%= typeof formData !== 'undefined' && formData.algorithm === 'RS512' ? 'selected' : '' %>>
-                                        RS512 (SHA-512 with RSA)
-                                    </option>
+                            <div class="form-floating mb-3" id="curveContainer" style="display: none;">
+                                <select class="form-select" id="curve" name="curve">
+                                    <option value="prime256v1" selected>P-256 (prime256v1 / secp256r1)</option>
                                 </select>
-                                <label for="algorithm">Signing Algorithm *</label>
+                                <label for="curve">Elliptic Curve</label>
                             </div>
 
                             <div class="form-floating mb-3">
@@ -264,16 +278,20 @@
                     <div class="card-body">
                         <ul class="list-unstyled small mb-0">
                             <li class="mb-2">
-                                <strong>RS256:</strong> Most commonly used, excellent compatibility.
+                                <strong>RS256:</strong> Most commonly used RSA algorithm, excellent compatibility.
                                 Recommended for general use.
                             </li>
                             <li class="mb-2">
-                                <strong>RS384:</strong> Enhanced hash security, good for sensitive data.
+                                <strong>RS384:</strong> Enhanced hash security with RSA, good for sensitive data.
                                 Balanced security and performance.
                             </li>
                             <li class="mb-2">
-                                <strong>RS512:</strong> Maximum hash security, largest signature size.
+                                <strong>RS512:</strong> Maximum RSA hash security, largest signature size.
                                 Use for maximum security requirements.
+                            </li>
+                            <li class="mb-2">
+                                <strong>ES256:</strong> Elliptic Curve P-256 with SHA-256. Smaller keys, faster signing,
+                                modern alternative to RSA with equivalent security to 3072-bit RSA.
                             </li>
                         </ul>
                     </div>
@@ -284,16 +302,47 @@
 </div>
 
 <script>
+// Toggle between RSA and EC options based on algorithm selection
+function updateAlgorithmOptions() {
+    const algorithm = document.getElementById('algorithm').value;
+    const keySizeContainer = document.getElementById('keySizeContainer');
+    const curveContainer = document.getElementById('curveContainer');
+    const keySizeField = document.getElementById('keySize');
+    const curveField = document.getElementById('curve');
+
+    if (algorithm === 'ES256') {
+        // Show EC curve, hide RSA key size
+        keySizeContainer.style.display = 'none';
+        curveContainer.style.display = 'block';
+        keySizeField.removeAttribute('required');
+        curveField.setAttribute('required', 'required');
+    } else if (algorithm.startsWith('RS')) {
+        // Show RSA key size, hide EC curve
+        keySizeContainer.style.display = 'block';
+        curveContainer.style.display = 'none';
+        keySizeField.setAttribute('required', 'required');
+        curveField.removeAttribute('required');
+    }
+}
+
 // Update generation preview
 function updatePreview() {
     const name = document.getElementById('name').value;
     const keySize = document.getElementById('keySize').value;
     const algorithm = document.getElementById('algorithm').value;
+    const curve = document.getElementById('curve').value;
     const validityDays = document.getElementById('validityDays').value;
 
-    if (name && keySize && algorithm) {
+    if (name && algorithm) {
         document.getElementById('previewName').textContent = name;
-        document.getElementById('previewKeySize').textContent = keySize + ' bits';
+
+        // Display key info based on algorithm type
+        if (algorithm === 'ES256') {
+            document.getElementById('previewKeySize').textContent = `EC ${curve} (256-bit security)`;
+        } else if (keySize) {
+            document.getElementById('previewKeySize').textContent = keySize + ' bits';
+        }
+
         document.getElementById('previewAlgorithm').textContent = algorithm;
 
         if (validityDays) {
@@ -305,9 +354,14 @@ function updatePreview() {
             document.getElementById('previewValidity').textContent = 'No expiry';
         }
 
-        // Estimate generation time based on key size
-        const estimatedTime = keySize === '4096' ? '5-10 seconds' :
-                             keySize === '3072' ? '3-7 seconds' : '2-5 seconds';
+        // Estimate generation time based on algorithm and key size
+        let estimatedTime;
+        if (algorithm === 'ES256') {
+            estimatedTime = '1-2 seconds'; // EC is faster
+        } else {
+            estimatedTime = keySize === '4096' ? '5-10 seconds' :
+                           keySize === '3072' ? '3-7 seconds' : '2-5 seconds';
+        }
         document.getElementById('previewGenerationTime').textContent = `Estimated ${estimatedTime}`;
     }
 }
@@ -326,8 +380,14 @@ document.getElementById('previewBtn').addEventListener('click', function() {
 });
 
 // Update preview on input changes
-document.querySelectorAll('#name, #keySize, #algorithm, #validityDays').forEach(input => {
+document.querySelectorAll('#name, #keySize, #algorithm, #curve, #validityDays').forEach(input => {
     input.addEventListener('change', updatePreview);
+});
+
+// Listen to algorithm changes to toggle RSA/EC options
+document.getElementById('algorithm').addEventListener('change', function() {
+    updateAlgorithmOptions();
+    updatePreview();
 });
 
 // Log progress message
@@ -372,7 +432,9 @@ document.getElementById('certificateForm').addEventListener('submit', function(e
     data.allowExport = data.allowExport === 'on';
 
     setTimeout(() => {
-        updateProgress(30, 'Generating RSA key pair...');
+        const algorithm = document.getElementById('algorithm').value;
+        const keyGenMsg = algorithm === 'ES256' ? 'Generating EC key pair...' : 'Generating RSA key pair...';
+        updateProgress(30, keyGenMsg);
 
         fetch('/certificates/create', {
             method: 'POST',
@@ -454,6 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('algorithm').value = 'RS256';
     }
 
+    // Initialize algorithm-specific options display
+    updateAlgorithmOptions();
     updatePreview();
 });
 </script>

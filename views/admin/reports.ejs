@@ -1,0 +1,164 @@
+<style>
+    .admin-page-background {
+        background-color: #ffe5e5;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+        margin: -2rem -15px 0 -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+</style>
+
+<div class="admin-page-background">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background-color: #6c757d; color: white;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>System Reports & Analytics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- User Statistics -->
+                            <div class="col-12 mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="bi bi-people-fill me-2 text-primary"></i>User Statistics
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-primary">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-people text-primary" style="font-size: 2.5rem;"></i>
+                                                <h3 class="mt-2 mb-0"><%= stats.totalIssuers %></h3>
+                                                <p class="text-muted mb-0">Total Issuers</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-info">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-person text-info" style="font-size: 2.5rem;"></i>
+                                                <h3 class="mt-2 mb-0"><%= stats.totalCitizens %></h3>
+                                                <p class="text-muted mb-0">Total Citizens</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card border-success">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-building text-success" style="font-size: 2.5rem;"></i>
+                                                <h3 class="mt-2 mb-0"><%= stats.totalInstitutions %></h3>
+                                                <p class="text-muted mb-0">Healthcare Institutions</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Request Statistics -->
+                            <div class="col-12 mb-4">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="bi bi-clipboard-data me-2 text-warning"></i>Institution Request Statistics
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card border-warning">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-clock-history text-warning" style="font-size: 2rem;"></i>
+                                                <h4 class="mt-2 mb-0"><%= stats.pendingCreationRequests %></h4>
+                                                <p class="text-muted mb-0 small">Pending Creation Requests</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card border-success">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                                                <h4 class="mt-2 mb-0"><%= stats.approvedCreationRequests %></h4>
+                                                <p class="text-muted mb-0 small">Approved Creations</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card border-danger">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-x-circle text-danger" style="font-size: 2rem;"></i>
+                                                <h4 class="mt-2 mb-0"><%= stats.rejectedCreationRequests %></h4>
+                                                <p class="text-muted mb-0 small">Rejected Creations</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card border-info">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-person-plus text-info" style="font-size: 2rem;"></i>
+                                                <h4 class="mt-2 mb-0"><%= stats.pendingJoinRequests %></h4>
+                                                <p class="text-muted mb-0 small">Pending Join Requests</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Summary -->
+                            <div class="col-12">
+                                <h6 class="border-bottom pb-2 mb-3">
+                                    <i class="bi bi-info-circle me-2 text-info"></i>System Summary
+                                </h6>
+                                <div class="alert alert-light">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                                    <strong>Active System:</strong> All services operational
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-building text-primary me-2"></i>
+                                                    <strong>Institutions:</strong> <%= stats.totalInstitutions %> registered
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-people text-info me-2"></i>
+                                                    <strong>Total Users:</strong> <%= stats.totalIssuers + stats.totalCitizens %> (Issuers + Citizens)
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <i class="bi bi-clock-history text-warning me-2"></i>
+                                                    <strong>Pending Actions:</strong> <%= stats.pendingCreationRequests + stats.pendingJoinRequests %> requests awaiting review
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-graph-up text-success me-2"></i>
+                                                    <strong>Request Approval Rate:</strong>
+                                                    <%
+                                                        const totalProcessed = stats.approvedCreationRequests + stats.rejectedCreationRequests;
+                                                        const approvalRate = totalProcessed > 0 ? Math.round((stats.approvedCreationRequests / totalProcessed) * 100) : 0;
+                                                    %>
+                                                    <%= approvalRate %>%
+                                                </li>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-calendar-check text-primary me-2"></i>
+                                                    <strong>Generated:</strong> <%= new Date().toLocaleDateString() %>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

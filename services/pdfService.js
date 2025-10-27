@@ -58,141 +58,336 @@ class PDFService {
     async addPRCContent(doc, prcData, qrCodeData) {
         // Page dimensions
         const pageWidth = doc.page.width;
-        const pageHeight = doc.page.height;
-        const margin = 50;
+        const margin = doc.page.margins.left;
         const contentWidth = pageWidth - (margin * 2);
 
         // Colors
-        const primaryColor = '#0066CC';
+        const primaryColor = '#000000';
         const grayColor = '#666666';
-        const lightGrayColor = '#CCCCCC';
 
-        // Add header
-        this.addHeader(doc, contentWidth, primaryColor);
+        // Move up to reduce top margin (like qrscanapp)
+        doc.moveUp(2.5);
 
-        // Move down after header
-        doc.moveDown(2);
-
-        // Add title
-        doc.fontSize(20)
+        // === MAIN TITLES ===
+        doc.font('Helvetica-Bold').fontSize(12)
             .fillColor(primaryColor)
-            .text('PROVISIONAL REPLACEMENT CERTIFICATE', margin, doc.y, {
-                align: 'center',
-                width: contentWidth
-            });
+            .text('PROVISIONAL REPLACEMENT CERTIFICATE', { align: 'center' });
 
-        doc.fontSize(16)
-            .text('OF THE', margin, doc.y + 10, {
-                align: 'center',
-                width: contentWidth
-            });
+        doc.text('OF THE', { align: 'center' });
+        doc.text('EUROPEAN HEALTH INSURANCE CARD', { align: 'center' });
 
-        doc.fontSize(18)
-            .text('EUROPEAN HEALTH INSURANCE CARD', margin, doc.y + 10, {
-                align: 'center',
-                width: contentWidth
-            });
+        // === SUBTITLES ===
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('(to be presented to a healthcare provider)', { align: 'center' });
 
+        doc.text('(Article 25 of Regulation (EC) No 987/2009)', { align: 'center' });
         doc.moveDown(1);
 
-        // Add subtitle
-        doc.fontSize(10)
+        // === ISSUING MEMBER STATE LABEL ===
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(primaryColor)
+            .text('Issuing Member State', { align: 'right' });
+        doc.moveDown(0.5);
+
+        // === FIELDS 1-2: Side by side boxes ===
+        const currentY = doc.y;
+        const boxHeight = 30;
+        const box1Width = contentWidth * 0.48;
+        const box2Width = contentWidth * 0.48;
+        const box2X = margin + contentWidth * 0.52;
+
+        // Reduced line width for cleaner look
+        doc.lineWidth(0.5);
+
+        // Field 1 box (number only)
+        doc.rect(margin, currentY, box1Width, boxHeight).stroke();
+        doc.font('Helvetica').fontSize(9)
+            .fillColor(primaryColor)
+            .text('1.', margin + 5, currentY + 10);
+
+        // Field 2 box (country)
+        const countryName = this.getCountryName(prcData.ic);
+        doc.rect(box2X, currentY, box2Width, boxHeight).stroke();
+        doc.text(`2. ${countryName}`, box2X + 5, currentY + 10);
+
+        doc.y = currentY + boxHeight + 10;
+
+        // === CARD HOLDER INFORMATION ===
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('Card holder-related information', { align: 'left' });
+        doc.moveDown(0.5);
+
+        const holderBoxY = doc.y;
+        const holderBoxHeight = 120;
+
+        // Draw outer box
+        doc.rect(margin, holderBoxY, contentWidth, holderBoxHeight).stroke();
+
+        // Field 3: Name
+        let fieldY = holderBoxY + 5;
+        doc.font('Helvetica').fontSize(9)
+            .text('3. Name', margin + 5, fieldY);
+        doc.rect(margin, fieldY + 15, contentWidth, 20).stroke();
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(prcData.fn || '', margin + 5, fieldY + 20);
+
+        // Field 4: Given name(s)
+        fieldY += 40;
+        doc.font('Helvetica').fontSize(9)
+            .text('4. Given name(s)', margin + 5, fieldY);
+        doc.rect(margin, fieldY + 15, contentWidth, 20).stroke();
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(prcData.gn || '', margin + 5, fieldY + 20);
+
+        // Fields 5 & 6: Date of birth and Personal ID side by side
+        fieldY += 40;
+        const field5Width = contentWidth * 0.48;
+        const field6Width = contentWidth * 0.48;
+        const field6X = margin + contentWidth * 0.52;
+
+        doc.font('Helvetica').fontSize(9)
+            .text('5. Date of birth', margin + 5, fieldY);
+        doc.text('6. Personal identification number', field6X + 5, fieldY);
+
+        doc.rect(margin, fieldY + 15, field5Width, 20).stroke();
+        doc.rect(field6X, fieldY + 15, field6Width, 20).stroke();
+
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(this.formatDate(prcData.dob), margin + 5, fieldY + 20);
+        doc.text(prcData.hi || '', field6X + 5, fieldY + 20);
+
+        doc.y = holderBoxY + holderBoxHeight + 15;
+
+        // === COMPETENT INSTITUTION ===
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('Competent institution', { align: 'left' });
+        doc.moveDown(0.5);
+
+        const institutionBoxY = doc.y;
+        const institutionBoxHeight = 45;
+
+        doc.rect(margin, institutionBoxY, contentWidth, institutionBoxHeight).stroke();
+
+        doc.font('Helvetica').fontSize(9)
+            .fillColor(primaryColor)
+            .text('7. Institution', margin + 5, institutionBoxY + 5);
+
+        doc.rect(margin, institutionBoxY + 20, contentWidth, 20).stroke();
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(`${prcData.in} (${prcData.ii})`, margin + 5, institutionBoxY + 25);
+
+        doc.y = institutionBoxY + institutionBoxHeight + 15;
+
+        // === CARD INFORMATION ===
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('Card-related information', { align: 'left' });
+        doc.moveDown(0.5);
+
+        const cardBoxY = doc.y;
+        const cardBoxHeight = 45;
+
+        doc.rect(margin, cardBoxY, contentWidth, cardBoxHeight).stroke();
+
+        // Fields 8 & 9 side by side
+        const field8Width = contentWidth * 0.48;
+        const field9Width = contentWidth * 0.48;
+        const field9X = margin + contentWidth * 0.52;
+
+        doc.font('Helvetica').fontSize(9)
+            .fillColor(primaryColor)
+            .text('8. Card identification number', margin + 5, cardBoxY + 5);
+        doc.text('9. Expiry date', field9X + 5, cardBoxY + 5);
+
+        doc.rect(margin, cardBoxY + 20, field8Width, 20).stroke();
+        doc.rect(field9X, cardBoxY + 20, field9Width, 20).stroke();
+
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(prcData.ci || '', margin + 5, cardBoxY + 25);
+        doc.text(prcData.xd ? this.formatDate(prcData.xd) : '', field9X + 5, cardBoxY + 25);
+
+        doc.y = cardBoxY + cardBoxHeight + 15;
+
+        // === CERTIFICATE VALIDITY & SIGNATURE BOX ===
+        const validityBoxY = doc.y;
+        const leftBoxWidth = contentWidth * 0.6;
+        const signatureBoxWidth = contentWidth * 0.35;
+        const signatureBoxX = margin + contentWidth * 0.65;
+        const boxesHeight = 160;
+
+        // Left box: Validity period and delivery date
+        doc.rect(margin, validityBoxY, leftBoxWidth, boxesHeight).stroke();
+
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('Certificate validity period and delivery date', margin + 5, validityBoxY + 5);
+
+        // From/To fields
+        let validityY = validityBoxY + 25;
+        doc.font('Helvetica').fontSize(9)
+            .fillColor(primaryColor)
+            .text('(a) From', margin + 5, validityY);
+        doc.text('(b) To', margin + 5, validityY + 30);
+
+        doc.rect(margin + 60, validityY - 5, leftBoxWidth - 70, 20).stroke();
+        doc.rect(margin + 60, validityY + 25, leftBoxWidth - 70, 20).stroke();
+
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(this.formatDate(prcData.sd), margin + 65, validityY);
+        doc.text(this.formatDate(prcData.ed), margin + 65, validityY + 30);
+
+        // Delivery date
+        validityY += 70;
+        doc.font('Helvetica').fontSize(9)
+            .fillColor(primaryColor)
+            .text('(c) Date', margin + 5, validityY);
+
+        doc.rect(margin + 60, validityY - 5, leftBoxWidth - 70, 20).stroke();
+        doc.font('Helvetica-Bold').fontSize(10)
+            .text(this.formatDate(prcData.di), margin + 65, validityY);
+
+        // Right box: Signature with QR code
+        doc.rect(signatureBoxX, validityBoxY, signatureBoxWidth, boxesHeight).stroke();
+
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(grayColor)
+            .text('Signature and/or stamp', signatureBoxX + 5, validityBoxY + 5, {
+                width: signatureBoxWidth - 10,
+                align: 'center'
+            });
+
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .text('of the institution', signatureBoxX + 5, validityBoxY + 17, {
+                width: signatureBoxWidth - 10,
+                align: 'center'
+            });
+
+        // Embed QR code in signature box
+        await this.addQRCodeInSignatureBox(doc, qrCodeData, signatureBoxX, validityBoxY, signatureBoxWidth, boxesHeight);
+
+        // Move to bottom of boxes for footer section
+        doc.y = validityBoxY + boxesHeight + 20;
+
+        // === NOTES AND FOOTER ===
+        // Add horizontal separator
+        doc.moveTo(margin, doc.y)
+            .lineTo(pageWidth - margin, doc.y)
+            .stroke();
+
+        doc.moveDown(0.5);
+
+        // Notes title
+        doc.font('Helvetica-Oblique').fontSize(9)
+            .fillColor(primaryColor)
+            .text('Notes and information', margin, doc.y);
+
+        doc.moveDown(0.5);
+
+        // Notes content - matching qrscanapp format
+        doc.font('Helvetica').fontSize(9)
             .fillColor(grayColor)
             .text('as defined in Annex 2 to Decision No S2', margin, doc.y, {
-                align: 'center',
+                align: 'justify',
                 width: contentWidth
             });
 
-        doc.text('concerning the technical specifications of the European Health Insurance Card', margin, doc.y + 5, {
-            align: 'center',
+        doc.text('concerning the technical specifications of the European Health Insurance Card', margin, doc.y, {
+            align: 'justify',
             width: contentWidth
         });
 
-        doc.moveDown(2);
+        doc.moveDown(0.5);
 
-        // Add issuing member state
-        this.addSection(doc, 'Issuing Member State', margin, contentWidth, lightGrayColor);
-        doc.fontSize(10)
-            .fillColor('black')
-            .text(`2. ${this.getCountryName(prcData.ic)}`, margin + 10, doc.y + 5);
+        doc.text('All norms applicable to the eye-readable data included in the European Health Insurance Card also apply to this provisional replacement certificate.', margin, doc.y, {
+            align: 'justify',
+            width: contentWidth
+        });
 
         doc.moveDown(1);
 
-        // Add card holder information
-        this.addSection(doc, 'Card holder-related information', margin, contentWidth, lightGrayColor);
+        // Generation timestamp footer
+        doc.font('Helvetica').fontSize(8)
+            .fillColor(grayColor)
+            .text(`Generated on: ${new Date().toLocaleString('en-GB')}`, margin, doc.y, {
+                align: 'center',
+                width: contentWidth
+            });
+    }
 
-        const holderY = doc.y + 5;
-        doc.fontSize(10)
-            .fillColor('black')
-            .text(`3. Name: ${prcData.fn}`, margin + 10, holderY);
+    /**
+     * Add QR code inside signature box (replicated from qrscanapp)
+     * Generates optimal high-quality QR code and centers it in the signature box
+     * @param {PDFDocument} doc - PDFKit document
+     * @param {string} qrCodeData - Base45 encoded QR data
+     * @param {number} signatureBoxX - X position of signature box
+     * @param {number} signatureBoxY - Y position of signature box
+     * @param {number} signatureBoxWidth - Width of signature box
+     * @param {number} signatureBoxHeight - Height of signature box
+     */
+    async addQRCodeInSignatureBox(doc, qrCodeData, signatureBoxX, signatureBoxY, signatureBoxWidth, signatureBoxHeight) {
+        try {
+            logger.debug('Adding QR code to signature box', {
+                boxX: signatureBoxX,
+                boxY: signatureBoxY,
+                boxWidth: signatureBoxWidth,
+                boxHeight: signatureBoxHeight,
+                dataLength: qrCodeData.length
+            });
 
-        doc.text(`4. Given name(s): ${prcData.gn}`, margin + 10, holderY + 15);
+            // Generate optimal QR code using the QR service (which uses Sharp for high quality)
+            const qrCodeService = require('./qrCodeService');
 
-        doc.text(`5. Date of birth: ${this.formatDate(prcData.dob)}`, margin + 10, holderY + 30);
+            // Calculate optimal size based on signature box dimensions
+            // Leave 10px padding on each side
+            const maxQRSize = Math.min(signatureBoxWidth - 20, signatureBoxHeight - 20);
+            const baseSize = 150;
+            const qrCodeSize = Math.min(maxQRSize, baseSize);
 
-        doc.text(`6. Personal identification number: ${prcData.hi}`, margin + 10, holderY + 45);
+            logger.debug('QR code size calculated', { maxQRSize, qrCodeSize });
 
-        doc.y = holderY + 70;
-        doc.moveDown(1);
+            // Generate high-quality QR code image using optimal generation
+            const qrCodeBuffer = await qrCodeService.generateQRCodeImage(qrCodeData, {
+                width: qrCodeSize,
+                margin: 2,
+                useOptimal: true // Use Sharp-based optimal generation
+            });
 
-        // Add competent institution information
-        this.addSection(doc, 'Competent institution-related information', margin, contentWidth, lightGrayColor);
+            logger.debug('QR code generated', { bufferSize: qrCodeBuffer.length });
 
-        const instY = doc.y + 5;
-        doc.fontSize(10)
-            .fillColor('black')
-            .text(`7. Identification number of the institution:`, margin + 10, instY);
+            // Calculate centered position within signature box
+            const qrCodeX = signatureBoxX + (signatureBoxWidth - qrCodeSize) / 2;
+            const qrCodeY = signatureBoxY + (signatureBoxHeight - qrCodeSize) / 2;
 
-        doc.text(`${prcData.ii} - ${prcData.in}`, margin + 20, instY + 15);
+            logger.debug('QR code position calculated', { qrCodeX, qrCodeY });
 
-        doc.y = instY + 40;
-        doc.moveDown(1);
+            // Add QR code image to PDF
+            doc.image(qrCodeBuffer, qrCodeX, qrCodeY, {
+                width: qrCodeSize,
+                height: qrCodeSize,
+                fit: [qrCodeSize, qrCodeSize]
+            });
 
-        // Add card-related information
-        this.addSection(doc, 'Card-related information', margin, contentWidth, lightGrayColor);
+            logger.debug('QR code added to signature box successfully');
 
-        const cardY = doc.y + 5;
-        if (prcData.ci) {
-            doc.fontSize(10)
-                .fillColor('black')
-                .text(`8. Identification number of the card: ${prcData.ci}`, margin + 10, cardY);
+        } catch (error) {
+            logger.error('Failed to add QR code to signature box', {
+                error: error.message,
+                stack: error.stack
+            });
+
+            // Fallback: Add error message in signature box
+            doc.font('Helvetica').fontSize(9)
+                .fillColor('#FF0000')
+                .text('QR Code Generation Failed',
+                    signatureBoxX + 20,
+                    signatureBoxY + (signatureBoxHeight / 2), {
+                        width: signatureBoxWidth - 40,
+                        align: 'center'
+                    });
         }
-
-        const expiryY = prcData.ci ? cardY + 20 : cardY;
-        if (prcData.xd) {
-            doc.text(`9. Expiry date: ${this.formatDate(prcData.xd)}`, margin + 10, expiryY);
-        }
-
-        doc.y = expiryY + 30;
-        doc.moveDown(1);
-
-        // Add certificate validity period
-        this.addSection(doc, 'Certificate validity period', margin, contentWidth, lightGrayColor);
-
-        const validityY = doc.y + 5;
-        doc.fontSize(10)
-            .fillColor('black')
-            .text(`(a) From: ${this.formatDate(prcData.sd)}`, margin + 10, validityY);
-
-        doc.text(`(b) To: ${this.formatDate(prcData.ed)}`, margin + 10, validityY + 15);
-
-        doc.y = validityY + 40;
-        doc.moveDown(1);
-
-        // Add certificate delivery date
-        this.addSection(doc, 'Certificate delivery date', margin, contentWidth, lightGrayColor);
-
-        doc.fontSize(10)
-            .fillColor('black')
-            .text(`(c) ${this.formatDate(prcData.di)}`, margin + 10, doc.y + 5);
-
-        doc.moveDown(2);
-
-        // Add QR code section
-        await this.addQRCodeSection(doc, qrCodeData, margin, contentWidth);
-
-        // Add footer
-        this.addFooter(doc, margin, contentWidth, grayColor);
     }
 
     /**

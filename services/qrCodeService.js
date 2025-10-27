@@ -57,7 +57,16 @@ class QRCodeService {
         try {
             logger.debug('Generating QR code image', { dataLength: base45Data.length });
 
-            // Default options following eEHIC specifications
+            // Use optimal generation if Sharp is available
+            if (options.useOptimal !== false) {
+                try {
+                    return await this.generateOptimalQRCodeImage(base45Data, options);
+                } catch (optimalError) {
+                    logger.warn('Optimal QR generation failed, falling back to standard', { error: optimalError.message });
+                }
+            }
+
+            // Fallback: Standard generation
             const qrOptions = {
                 errorCorrectionLevel: 'L', // Low error correction for maximum data capacity
                 type: 'png',
@@ -84,6 +93,107 @@ class QRCodeService {
             logger.error('QR code image generation error', { error: error.message, stack: error.stack });
             throw new Error(`Failed to generate QR code image: ${error.message}`);
         }
+    }
+
+    /**
+     * Generate optimal high-quality QR code using SVG->PNG conversion
+     * Replicates qrscanapp functionality for best quality
+     * @param {string} base45Data - Base45 encoded data
+     * @param {Object} options - QR code options
+     * @returns {Promise<Buffer>} - High-quality PNG buffer
+     */
+    async generateOptimalQRCodeImage(base45Data, options = {}) {
+        try {
+            const sharp = require('sharp');
+
+            const dataLength = base45Data.length;
+            logger.debug('Generating optimal QR code', { dataLength });
+
+            // Get optimal version and error correction
+            const optimal = this.findOptimalQRVersion(dataLength);
+            logger.debug('Optimal QR parameters found', optimal);
+
+            // Generate SVG first for best quality
+            const svgString = await QRCode.toString(base45Data, {
+                type: 'svg',
+                version: optimal.version,
+                errorCorrectionLevel: optimal.errorLevel,
+                margin: options.margin || 2,
+                width: options.width || 300,
+                color: {
+                    dark: '#000000',
+                    light: '#ffffff'
+                }
+            });
+
+            logger.debug('SVG QR code generated', { svgLength: svgString.length });
+
+            // Convert SVG to high-resolution PNG using Sharp
+            const targetSize = options.width || 170;
+            const upscale = 3; // 3x resolution for better quality
+
+            const svgBuffer = Buffer.from(svgString);
+            const pngBuffer = await sharp(svgBuffer)
+                .png({
+                    quality: 100,
+                    compressionLevel: 0 // No compression for maximum quality
+                })
+                .resize(targetSize * upscale, targetSize * upscale)
+                .toBuffer();
+
+            logger.debug('PNG conversion complete', {
+                bufferSize: pngBuffer.length,
+                targetSize,
+                actualSize: targetSize * upscale
+            });
+
+            return pngBuffer;
+
+        } catch (error) {
+            logger.error('Optimal QR code generation error', { error: error.message, stack: error.stack });
+            throw new Error(`Failed to generate optimal QR code: ${error.message}`);
+        }
+    }
+
+    /**
+     * Find optimal QR version for given data length
+     * Returns smallest version that fits the data
+     * @param {number} dataLength - Length of data to encode
+     * @returns {Object} - Optimal version and error correction level
+     */
+    findOptimalQRVersion(dataLength) {
+        const capacityTable = {
+            'L': [25, 47, 77, 114, 154, 195, 224, 279, 335, 395, 468, 535, 619, 667, 758, 854, 938, 1046, 1153, 1249, 1352, 1460, 1588, 1704, 1853, 1990, 2132, 2223, 2369, 2520, 2677, 2840, 3009, 3183, 3351, 3537, 3729, 3927, 4087, 4296],
+            'M': [20, 38, 61, 90, 122, 154, 178, 221, 262, 311, 366, 419, 483, 528, 600, 656, 734, 816, 909, 970, 1035, 1134, 1248, 1326, 1451, 1542, 1637, 1732, 1839, 1994, 2113, 2238, 2369, 2506, 2632, 2780, 2894, 3054, 3220, 3391],
+            'Q': [16, 29, 47, 67, 87, 108, 125, 157, 189, 221, 259, 296, 352, 376, 426, 470, 531, 574, 644, 702, 742, 823, 890, 963, 1041, 1094, 1172, 1263, 1322, 1429, 1499, 1618, 1700, 1787, 1867, 1966, 2071, 2181, 2298, 2420],
+            'H': [10, 20, 35, 50, 64, 84, 93, 122, 143, 174, 200, 227, 259, 283, 321, 365, 408, 452, 493, 557, 587, 640, 672, 744, 779, 864, 910, 958, 1016, 1080, 1150, 1226, 1307, 1394, 1431, 1530, 1591, 1658, 1774, 1852]
+        };
+
+        // Find all viable options
+        const viableOptions = [];
+        for (let version = 1; version <= 40; version++) {
+            for (const errorLevel of ['L', 'M', 'Q', 'H']) {
+                const capacity = capacityTable[errorLevel][version - 1];
+                if (capacity >= dataLength) {
+                    const moduleCount = 17 + (version * 4);
+                    viableOptions.push({
+                        version,
+                        errorLevel,
+                        capacity,
+                        moduleCount
+                    });
+                }
+            }
+        }
+
+        if (viableOptions.length === 0) {
+            throw new Error(`Data too large for QR code (${dataLength} characters)`);
+        }
+
+        // Sort by smallest version (easier to scan)
+        viableOptions.sort((a, b) => a.version - b.version || a.capacity - b.capacity);
+
+        return viableOptions[0];
     }
 
     /**

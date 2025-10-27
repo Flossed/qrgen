@@ -84,76 +84,19 @@
                             <div class="form-floating mb-3">
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="">Select account type</option>
-                                    <option value="user" <%= typeof formData !== 'undefined' && formData.role === 'user' ? 'selected' : '' %>>
-                                        User - Basic access to view PRC documents
+                                    <option value="citizen" <%= typeof formData !== 'undefined' && formData.role === 'citizen' ? 'selected' : '' %>>
+                                        Citizen - Basic access to view PRC documents
                                     </option>
                                     <option value="issuer" <%= typeof formData !== 'undefined' && formData.role === 'issuer' ? 'selected' : '' %>>
                                         Issuer - Generate and sign PRC documents
                                     </option>
                                 </select>
                                 <label for="role">Account Role</label>
-                            </div>
-                        </div>
-
-                        <!-- Institution Information (for issuers) -->
-                        <div id="institutionFields" class="row" style="display: none;">
-                            <div class="col-12">
-                                <h6 class="text-muted mb-3 mt-2">
-                                    <i class="bi bi-building me-2"></i>Institution Information
-                                </h6>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="institutionId" name="institutionId"
-                                           placeholder="Institution ID" minlength="4" maxlength="10"
-                                           pattern="^\d+$"
-                                           value="<%= typeof formData !== 'undefined' ? formData.institutionId || '' : '' %>">
-                                    <label for="institutionId">Institution ID</label>
-                                    <div class="form-text">
-                                        <small>4-10 digits only</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" id="country" name="country">
-                                        <option value="">Select country</option>
-                                        <option value="AT" <%= typeof formData !== 'undefined' && formData.country === 'AT' ? 'selected' : '' %>>Austria</option>
-                                        <option value="BE" <%= typeof formData !== 'undefined' && formData.country === 'BE' ? 'selected' : '' %>>Belgium</option>
-                                        <option value="BG" <%= typeof formData !== 'undefined' && formData.country === 'BG' ? 'selected' : '' %>>Bulgaria</option>
-                                        <option value="HR" <%= typeof formData !== 'undefined' && formData.country === 'HR' ? 'selected' : '' %>>Croatia</option>
-                                        <option value="CY" <%= typeof formData !== 'undefined' && formData.country === 'CY' ? 'selected' : '' %>>Cyprus</option>
-                                        <option value="CZ" <%= typeof formData !== 'undefined' && formData.country === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
-                                        <option value="DK" <%= typeof formData !== 'undefined' && formData.country === 'DK' ? 'selected' : '' %>>Denmark</option>
-                                        <option value="EE" <%= typeof formData !== 'undefined' && formData.country === 'EE' ? 'selected' : '' %>>Estonia</option>
-                                        <option value="FI" <%= typeof formData !== 'undefined' && formData.country === 'FI' ? 'selected' : '' %>>Finland</option>
-                                        <option value="FR" <%= typeof formData !== 'undefined' && formData.country === 'FR' ? 'selected' : '' %>>France</option>
-                                        <option value="DE" <%= typeof formData !== 'undefined' && formData.country === 'DE' ? 'selected' : '' %>>Germany</option>
-                                        <option value="GR" <%= typeof formData !== 'undefined' && formData.country === 'GR' ? 'selected' : '' %>>Greece</option>
-                                        <option value="HU" <%= typeof formData !== 'undefined' && formData.country === 'HU' ? 'selected' : '' %>>Hungary</option>
-                                        <option value="IE" <%= typeof formData !== 'undefined' && formData.country === 'IE' ? 'selected' : '' %>>Ireland</option>
-                                        <option value="IT" <%= typeof formData !== 'undefined' && formData.country === 'IT' ? 'selected' : '' %>>Italy</option>
-                                        <option value="LV" <%= typeof formData !== 'undefined' && formData.country === 'LV' ? 'selected' : '' %>>Latvia</option>
-                                        <option value="LT" <%= typeof formData !== 'undefined' && formData.country === 'LT' ? 'selected' : '' %>>Lithuania</option>
-                                        <option value="LU" <%= typeof formData !== 'undefined' && formData.country === 'LU' ? 'selected' : '' %>>Luxembourg</option>
-                                        <option value="MT" <%= typeof formData !== 'undefined' && formData.country === 'MT' ? 'selected' : '' %>>Malta</option>
-                                        <option value="NL" <%= typeof formData !== 'undefined' && formData.country === 'NL' ? 'selected' : '' %>>Netherlands</option>
-                                        <option value="PL" <%= typeof formData !== 'undefined' && formData.country === 'PL' ? 'selected' : '' %>>Poland</option>
-                                        <option value="PT" <%= typeof formData !== 'undefined' && formData.country === 'PT' ? 'selected' : '' %>>Portugal</option>
-                                        <option value="RO" <%= typeof formData !== 'undefined' && formData.country === 'RO' ? 'selected' : '' %>>Romania</option>
-                                        <option value="SK" <%= typeof formData !== 'undefined' && formData.country === 'SK' ? 'selected' : '' %>>Slovakia</option>
-                                        <option value="SI" <%= typeof formData !== 'undefined' && formData.country === 'SI' ? 'selected' : '' %>>Slovenia</option>
-                                        <option value="ES" <%= typeof formData !== 'undefined' && formData.country === 'ES' ? 'selected' : '' %>>Spain</option>
-                                        <option value="SE" <%= typeof formData !== 'undefined' && formData.country === 'SE' ? 'selected' : '' %>>Sweden</option>
-                                        <option value="IS" <%= typeof formData !== 'undefined' && formData.country === 'IS' ? 'selected' : '' %>>Iceland</option>
-                                        <option value="LI" <%= typeof formData !== 'undefined' && formData.country === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
-                                        <option value="NO" <%= typeof formData !== 'undefined' && formData.country === 'NO' ? 'selected' : '' %>>Norway</option>
-                                        <option value="CH" <%= typeof formData !== 'undefined' && formData.country === 'CH' ? 'selected' : '' %>>Switzerland</option>
-                                        <option value="UK" <%= typeof formData !== 'undefined' && formData.country === 'UK' ? 'selected' : '' %>>United Kingdom</option>
-                                    </select>
-                                    <label for="country">Country</label>
+                                <div class="form-text" id="issuerNote" style="display: none;">
+                                    <small class="text-info">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        After registration, you'll be able to join an existing institution or request to create a new one.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -221,21 +164,14 @@
 </div>
 
 <script>
-// Show/hide institution fields based on role selection
+// Show/hide issuer note based on role selection
 document.getElementById('role').addEventListener('change', function() {
-    const institutionFields = document.getElementById('institutionFields');
-    const institutionInputs = institutionFields.querySelectorAll('input, select');
+    const issuerNote = document.getElementById('issuerNote');
 
     if (this.value === 'issuer') {
-        institutionFields.style.display = 'flex';
-        institutionInputs.forEach(input => {
-            input.required = true;
-        });
+        issuerNote.style.display = 'block';
     } else {
-        institutionFields.style.display = 'none';
-        institutionInputs.forEach(input => {
-            input.required = false;
-        });
+        issuerNote.style.display = 'none';
     }
 });
 

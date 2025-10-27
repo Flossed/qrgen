@@ -123,10 +123,17 @@ router.post('/login', [
             });
         }
 
-        // Redirect to return URL or dashboard
-        const redirectTo = req.session.returnTo || '/prc/dashboard';
-        delete req.session.returnTo;
-        logger.debug('Redirecting after login', { redirectTo });
+        // Redirect based on user role
+        let redirectTo;
+        if (req.session.returnTo) {
+            redirectTo = req.session.returnTo;
+            delete req.session.returnTo;
+        } else {
+            // Redirect to appropriate dashboard based on role
+            redirectTo = user.role === 'admin' ? '/admin/dashboard' : '/prc/dashboard';
+        }
+
+        logger.debug('Redirecting after login', { redirectTo, role: user.role });
 
         logExit('POST /auth/login', { success: true }, logger);
         res.redirect(redirectTo);
@@ -197,18 +204,8 @@ router.post('/register', [
         .withMessage('Organization name must be less than 100 characters')
         .trim(),
     body('role')
-        .isIn(['user', 'issuer'])
-        .withMessage('Invalid role selected'),
-    body('country')
-        .if(body('role').equals('issuer'))
-        .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
-        .withMessage('Please select a valid country'),
-    body('institutionId')
-        .if(body('role').equals('issuer'))
-        .isLength({ min: 4, max: 10 })
-        .withMessage('Institution ID must be between 4 and 10 characters')
-        .matches(/^\d+$/)
-        .withMessage('Institution ID must contain only digits')
+        .isIn(['citizen', 'issuer'])
+        .withMessage('Invalid role selected')
 ], async (req, res) => {
     logEntry('POST /auth/register', { username: req.body.username, email: req.body.email, role: req.body.role }, logger);
 
@@ -230,9 +227,7 @@ router.post('/register', [
             firstName,
             lastName,
             organization,
-            role,
-            country,
-            institutionId
+            role
         } = req.body;
 
         logger.debug('Registration data validated', { username, email, role });
@@ -270,14 +265,7 @@ router.post('/register', [
             role
         };
 
-        // Add issuer-specific fields if role is issuer
-        if (role === 'issuer') {
-            userData.country = country;
-            userData.institutionId = institutionId;
-            logger.debug('Adding issuer fields', { country, institutionId });
-        }
-
-        logger.debug('Creating new user');
+        logger.debug('Creating new user', { role });
         const user = new User(userData);
         await user.save();
 
@@ -287,10 +275,11 @@ router.post('/register', [
         req.session.userId = user._id;
         logger.debug('Session created', { sessionId: req.sessionID });
 
-        // Redirect to dashboard
-        logger.debug('Redirecting to dashboard');
+        // Redirect to appropriate dashboard based on role
+        const redirectTo = user.role === 'admin' ? '/admin/dashboard' : '/prc/dashboard';
+        logger.debug('Redirecting to dashboard', { redirectTo, role: user.role });
         logExit('POST /auth/register', { success: true }, logger);
-        res.redirect('/prc/dashboard');
+        res.redirect(redirectTo);
 
     } catch (error) {
         logException('POST /auth/register', error, { username: req.body.username, email: req.body.email }, logger);
@@ -578,6 +567,14 @@ router.post('/profile', [
         .isLength({ min: 1, max: 50 })
         .withMessage('Last name is required and must be less than 50 characters')
         .trim(),
+    body('dateOfBirth')
+        .optional({ checkFalsy: true })
+        .matches(/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/)
+        .withMessage('Date of birth must be in format YYYY-MM-DD'),
+    body('countryOfResidence')
+        .optional({ checkFalsy: true })
+        .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
+        .withMessage('Please select a valid country'),
     body('organization')
         .optional()
         .isLength({ max: 100 })
@@ -603,7 +600,7 @@ router.post('/profile', [
             });
         }
 
-        const { firstName, lastName, organization } = req.body;
+        const { firstName, lastName, dateOfBirth, countryOfResidence, organization } = req.body;
         logger.debug('Updating user profile', { userId: req.session.userId, firstName, lastName });
 
         const user = await User.findById(req.session.userId);
@@ -615,19 +612,33 @@ router.post('/profile', [
         // Update fields
         user.firstName = firstName;
         user.lastName = lastName;
+        user.dateOfBirth = dateOfBirth || '';
+        user.countryOfResidence = countryOfResidence || '';
         user.organization = organization || '';
         user.updatedAt = Date.now();
+
+        // Check if profile is complete (for non-issuer users)
+        if (user.role !== 'issuer') {
+            user.profileCompleted = !!(user.firstName && user.lastName && user.dateOfBirth && user.countryOfResidence);
+        }
 
         await user.save();
 
         logger.debug('Profile updated successfully', {
             userId: user._id,
             username: user.username,
-            updatedFields: ['firstName', 'lastName', 'organization']
+            profileCompleted: user.profileCompleted,
+            updatedFields: ['firstName', 'lastName', 'dateOfBirth', 'countryOfResidence', 'organization']
         });
 
         req.session.success = 'Profile updated successfully';
         logExit('POST /auth/profile', { success: true }, logger);
+
+        // Redirect to dashboard for citizens/users to continue onboarding flow
+        if (user.role === 'citizen' || user.role === 'user') {
+            return res.redirect('/prc/dashboard');
+        }
+
         res.redirect('/auth/profile');
 
     } catch (error) {

@@ -15,7 +15,7 @@ const appLogger = getLogger('App');
 logEntry('main', { version: packageJson.version, nodeEnv: process.env.NODE_ENV });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4400;
 
 appLogger.info('Initializing PRC Generator Application', {
     version: packageJson.version,
@@ -152,8 +152,19 @@ appLogger.trace('Registering PRC routes');
 const prcRoutes = require('./routes/prcRoutes');
 app.use('/prc', prcRoutes);
 
+// EHIC routes (European Health Insurance Card)
+appLogger.trace('Registering EHIC routes');
+const ehicRoutes = require('./routes/ehicRoutes');
+app.use('/ehic', ehicRoutes);
+
 // Root redirect
 app.get('/', (req, res) => {
+    if (req.session && req.session.userId) {
+        // Redirect based on user role (will be populated by loadUser middleware)
+        if (req.user && req.user.role === 'admin') {
+            return res.redirect('/admin/dashboard');
+        }
+    }
     res.redirect('/prc/dashboard');
 });
 
@@ -161,6 +172,21 @@ app.get('/', (req, res) => {
 appLogger.trace('Registering certificate routes');
 const certRoutes = require('./routes/certRoutes');
 app.use('/certificates', certRoutes);
+
+// Institution routes
+appLogger.trace('Registering institution routes');
+const institutionRoutes = require('./routes/institutionRoutes');
+app.use('/institution', institutionRoutes);
+
+// Institution request routes
+appLogger.trace('Registering institution request routes');
+const institutionRequestRoutes = require('./routes/institutionRequestRoutes');
+app.use('/institution-request', institutionRequestRoutes);
+
+// Admin routes (Domain Owner)
+appLogger.trace('Registering admin routes');
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

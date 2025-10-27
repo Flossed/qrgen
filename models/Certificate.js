@@ -15,15 +15,27 @@ const certificateSchema = new mongoose.Schema({
     },
     keySize: {
         type: Number,
-        required: true,
-        enum: [2048, 3072, 4096],
+        required: function() {
+            // keySize only required for RSA algorithms
+            return this.algorithm && this.algorithm.startsWith('RS');
+        },
+        enum: [2048, 3072, 4096, null], // null allowed for EC algorithms
         default: 2048
     },
     algorithm: {
         type: String,
         required: true,
-        enum: ['RS256', 'RS384', 'RS512'],
+        enum: ['RS256', 'RS384', 'RS512', 'ES256'],
         default: 'RS256'
+    },
+    curve: {
+        type: String,
+        required: function() {
+            // curve only required for EC algorithms
+            return this.algorithm && this.algorithm.startsWith('ES');
+        },
+        enum: ['P-256', 'prime256v1', 'secp256r1', null], // P-256 aliases
+        default: null
     },
     publicKey: {
         type: String,
@@ -130,6 +142,29 @@ certificateSchema.statics.generateKeyPair = function(keySize = 2048) {
     return new Promise((resolve, reject) => {
         crypto.generateKeyPair('rsa', {
             modulusLength: keySize,
+            publicKeyEncoding: {
+                type: 'spki',
+                format: 'pem'
+            },
+            privateKeyEncoding: {
+                type: 'pkcs8',
+                format: 'pem'
+            }
+        }, (err, publicKey, privateKey) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve({ publicKey, privateKey });
+            }
+        });
+    });
+};
+
+// Static method to generate EC key pair (P-256/secp256r1/prime256v1)
+certificateSchema.statics.generateECKeyPair = function(namedCurve = 'prime256v1') {
+    return new Promise((resolve, reject) => {
+        crypto.generateKeyPair('ec', {
+            namedCurve: namedCurve, // P-256, prime256v1, or secp256r1
             publicKeyEncoding: {
                 type: 'spki',
                 format: 'pem'

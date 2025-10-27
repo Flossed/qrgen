@@ -127,6 +127,11 @@ const prcSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    // Citizen who requested this PRC (for citizen-requested PRCs)
+    citizenId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     generatedAt: {
         type: Date,
         default: Date.now

@@ -1,6 +1,6 @@
 {
   "name": "prc-qr-generator",
-  "version": "1.0.0",
+  "version": "0.0.4",
   "description": "PRC QR Code Generator Application - Multi-phase eEHIC compliant document generation",
   "main": "index.js",
   "repository": {
@@ -11,6 +11,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "updateVersions": "node updateVersions",
+    "setup:domain-owner": "node scripts/createDomainOwner.js",
     "test": "mocha --recursive --timeout 10000 --exit",
     "test:watch": "mocha --recursive --watch",
     "test:coverage": "nyc mocha --recursive",
@@ -88,6 +89,7 @@
     "pdfkit": "^0.17.2",
     "qrcode": "^1.5.4",
     "serve-favicon": "^2.5.0",
+    "sharp": "^0.34.4",
     "uuid": "^9.0.1"
   }
 }

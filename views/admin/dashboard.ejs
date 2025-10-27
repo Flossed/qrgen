@@ -1,0 +1,191 @@
+<style>
+    .admin-page-background {
+        background-color: #ffe5e5;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+        margin: -2rem -15px 0 -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+</style>
+
+<div class="admin-page-background">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header" style="background-color: #6c757d; color: white;">
+                        <h4 class="mb-0">
+                            <i class="bi bi-shield-check me-2"></i>Domain Owner Dashboard
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Welcome, <%= user.fullName %>!</strong><br>
+                    As the Domain Owner, you manage healthcare institution registrations and oversee the institutional framework of the PRC system.
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card border-warning h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-clock-history text-warning" style="font-size: 3rem;"></i>
+                                <h3 class="mt-3"><%= pendingCreations %></h3>
+                                <p class="text-muted mb-3">Pending Institution Creation Requests</p>
+                                <a href="/institution-request/pending-creations" class="btn btn-warning">
+                                    <i class="bi bi-eye me-2"></i>Review Requests
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-success h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-building-check text-success" style="font-size: 3rem;"></i>
+                                <h3 class="mt-3"><%= totalInstitutions %></h3>
+                                <p class="text-muted mb-3">Registered Healthcare Institutions</p>
+                                <a href="/admin/institutions" class="btn btn-success">
+                                    <i class="bi bi-list me-2"></i>View All Institutions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-primary h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                                <h3 class="mt-3"><%= totalIssuers %></h3>
+                                <p class="text-muted mb-3">Registered Issuers</p>
+                                <a href="/admin/issuers" class="btn btn-primary">
+                                    <i class="bi bi-list me-2"></i>View All Issuers
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>Recent Institution Creation Requests
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (recentCreationRequests.length === 0) { %>
+                    <p class="text-muted mb-0">No recent creation requests</p>
+                <% } else { %>
+                    <div class="list-group">
+                        <% recentCreationRequests.forEach(request => { %>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1"><%= request.institutionName %></h6>
+                                        <small class="text-muted">
+                                            Requested by <%= request.requestedBy.firstName %> <%= request.requestedBy.lastName %>
+                                            <br>
+                                            <%= new Date(request.createdAt).toLocaleDateString() %>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-warning">Pending</span>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                    <% if (pendingCreations > 5) { %>
+                        <div class="text-center mt-3">
+                            <a href="/institution-request/pending-creations" class="btn btn-sm btn-outline-warning">
+                                View All <%= pendingCreations %> Requests
+                            </a>
+                        </div>
+                    <% } %>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success bg-opacity-10">
+                <h5 class="mb-0">
+                    <i class="bi bi-building-add me-2"></i>Recently Approved Institutions
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (recentlyApprovedInstitutions.length === 0) { %>
+                    <p class="text-muted mb-0">No recently approved institutions</p>
+                <% } else { %>
+                    <div class="list-group">
+                        <% recentlyApprovedInstitutions.forEach(institution => { %>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1"><%= institution.name %></h6>
+                                        <small class="text-muted">
+                                            ID: <%= institution.institutionId %> | <%= institution.country %>
+                                            <br>
+                                            Created: <%= new Date(institution.createdAt).toLocaleDateString() %>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-success">Active</span>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="/institution-request/pending-creations" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-clipboard-check d-block mb-2" style="font-size: 2rem;"></i>
+                            Review Pending Requests
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/institutions" class="btn btn-outline-success w-100">
+                            <i class="bi bi-building d-block mb-2" style="font-size: 2rem;"></i>
+                            Manage Institutions
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/issuers" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-people d-block mb-2" style="font-size: 2rem;"></i>
+                            Manage Issuers
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/reports" class="btn btn-outline-info w-100">
+                            <i class="bi bi-graph-up d-block mb-2" style="font-size: 2rem;"></i>
+                            View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
