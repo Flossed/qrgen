@@ -84,8 +84,8 @@
                             <div class="form-floating mb-3">
                                 <select class="form-select" id="role" name="role" required>
                                     <option value="">Select account type</option>
-                                    <option value="user" <%= typeof formData !== 'undefined' && formData.role === 'user' ? 'selected' : '' %>>
-                                        User - Basic access to view PRC documents
+                                    <option value="citizen" <%= typeof formData !== 'undefined' && formData.role === 'citizen' ? 'selected' : '' %>>
+                                        Citizen - Basic access to view PRC documents
                                     </option>
                                     <option value="issuer" <%= typeof formData !== 'undefined' && formData.role === 'issuer' ? 'selected' : '' %>>
                                         Issuer - Generate and sign PRC documents

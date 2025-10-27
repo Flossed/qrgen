@@ -118,9 +118,26 @@
                     </h6>
 
                     <div class="form-floating mb-3">
-                        <input type="text" class="form-control" value="<%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>" readonly>
+                        <%
+                            // Map old 'user' role to new 'Citizen' label for display
+                            let roleDisplay = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                            if (user.role === 'user') {
+                                roleDisplay = 'Citizen';
+                            }
+                        %>
+                        <input type="text" class="form-control" value="<%= roleDisplay %>" readonly>
                         <label>Account Role</label>
                     </div>
+
+                    <% if ((user.role === 'citizen' || user.role === 'user') && user.personalIdNumber) { %>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="personalIdNumber" name="personalIdNumber"
+                               placeholder="Personal ID Number" readonly
+                               value="<%= user.personalIdNumber %>">
+                        <label for="personalIdNumber">Personal ID Number</label>
+                        <div class="form-text">Your unique personal identifier for healthcare services.</div>
+                    </div>
+                    <% } %>
 
                     <% if (user.role === 'issuer') { %>
                         <!-- Institution Information -->

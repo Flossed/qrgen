@@ -1,0 +1,193 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card-2-front me-2"></i>My EHIC (European Health Insurance Card)
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <%= success %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <% if (activeEHIC) { %>
+                    <!-- Active EHIC Card Display -->
+                    <div class="alert alert-success mb-4">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>Your EHIC is Active</strong><br>
+                        You can now request Provisional Replacement Certificates (PRCs) when traveling.
+                    </div>
+
+                    <div class="card border-success mb-4">
+                        <div class="card-header bg-success bg-opacity-10">
+                            <h6 class="mb-0">
+                                <i class="bi bi-credit-card-2-front me-2"></i>Active EHIC Card
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Cardholder Name</label>
+                                        <div class="fw-bold"><%= activeEHIC.holderFullName %></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Date of Birth</label>
+                                        <div class="fw-bold"><%= activeEHIC.dateOfBirth %></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Personal ID Number</label>
+                                        <div class="fw-bold"><%= activeEHIC.personalIdNumber %></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Issuing Institution</label>
+                                        <div class="fw-bold"><%= activeEHIC.institution.name %></div>
+                                        <small class="text-muted">ID: <%= activeEHIC.institutionId %></small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Card Issuer Country</label>
+                                        <div><span class="badge bg-primary"><%= activeEHIC.cardIssuerCountry %></span></div>
+                                    </div>
+                                    <% if (activeEHIC.cardId) { %>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Card ID</label>
+                                        <div class="fw-bold"><%= activeEHIC.cardId %></div>
+                                    </div>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Card Issued</label>
+                                        <div class="fw-bold"><%= new Date(activeEHIC.issuanceDate).toLocaleDateString() %></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Card Expiry Date</label>
+                                        <div class="fw-bold"><%= new Date(activeEHIC.expiryDate).toLocaleDateString() %></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-3">
+                                <a href="/prc/create" class="btn btn-primary">
+                                    <i class="bi bi-file-earmark-plus me-2"></i>Request a PRC
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <!-- No Active EHIC -->
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>No Active EHIC</strong><br>
+                        <% if (ehics.length > 0 && ehics[0].status === 'pending') { %>
+                            Your EHIC request is pending approval from your healthcare institution.
+                        <% } else { %>
+                            You don't have an active EHIC card. Request one to be able to request PRCs.
+                        <% } %>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <% if (ehics.length === 0 || (ehics.length > 0 && ehics[0].status !== 'pending')) { %>
+                            <a href="/ehic/request" class="btn btn-primary">
+                                <i class="bi bi-credit-card-2-front me-2"></i>Request EHIC
+                            </a>
+                        <% } %>
+                    </div>
+                <% } %>
+
+                <!-- EHIC History -->
+                <% if (ehics.length > 0) { %>
+                    <h6 class="text-muted mb-3 mt-4">
+                        <i class="bi bi-clock-history me-2"></i>EHIC History
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Institution</th>
+                                    <th>Issued Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                    <th>Requested</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% ehics.forEach(ehic => { %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= ehic.institution.name %></strong><br>
+                                            <small class="text-muted">ID: <%= ehic.institutionId %></small>
+                                        </td>
+                                        <td>
+                                            <small><%= new Date(ehic.issuanceDate).toLocaleDateString() %></small>
+                                        </td>
+                                        <td>
+                                            <small><%= new Date(ehic.expiryDate).toLocaleDateString() %></small>
+                                        </td>
+                                        <td>
+                                            <% if (ehic.status === 'approved') { %>
+                                                <% if (ehic.isActive) { %>
+                                                    <span class="badge bg-success">Active</span>
+                                                <% } else if (ehic.isExpired) { %>
+                                                    <span class="badge bg-secondary">Expired</span>
+                                                <% } else if (!ehic.isValid) { %>
+                                                    <span class="badge bg-warning">Invalidated</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-success">Approved</span>
+                                                <% } %>
+                                            <% } else if (ehic.status === 'pending') { %>
+                                                <span class="badge bg-warning">Pending</span>
+                                            <% } else if (ehic.status === 'rejected') { %>
+                                                <span class="badge bg-danger">Rejected</span>
+                                            <% } else if (ehic.status === 'revoked') { %>
+                                                <span class="badge bg-dark">Revoked</span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary"><%= ehic.status %></span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <small><%= new Date(ehic.createdAt).toLocaleDateString() %></small>
+                                        </td>
+                                    </tr>
+                                    <% if (ehic.reviewNotes) { %>
+                                        <tr>
+                                            <td colspan="5" class="bg-light">
+                                                <small class="text-muted">
+                                                    <strong>Notes:</strong> <%= ehic.reviewNotes %>
+                                                    <% if (ehic.reviewedBy) { %>
+                                                        <br><em>Reviewed by <%= ehic.reviewedBy.firstName %> <%= ehic.reviewedBy.lastName %></em>
+                                                    <% } %>
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+
+                <div class="mt-4">
+                    <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

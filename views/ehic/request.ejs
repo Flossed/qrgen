@@ -1,0 +1,160 @@
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card-2-front me-2"></i>Request European Health Insurance Card (EHIC)
+                </h5>
+            </div>
+            <div class="card-body">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <%= error %>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <% } %>
+
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>About EHIC</strong><br>
+                    Your EHIC (European Health Insurance Card) is the primary document for healthcare coverage across European countries. Once approved, you can use it to request Provisional Replacement Certificates (PRCs) when needed.
+                </div>
+
+                <!-- Citizen Information Display -->
+                <h6 class="text-muted mb-3">
+                    <i class="bi bi-person me-2"></i>Your Information
+                </h6>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Full Name</label>
+                            <div class="fw-bold"><%= user.firstName %> <%= user.lastName %></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Date of Birth</label>
+                            <div class="fw-bold"><%= user.dateOfBirth %></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Personal ID Number</label>
+                            <div class="fw-bold"><%= user.personalIdNumber %></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Country of Residence</label>
+                            <div class="fw-bold"><%= user.countryOfResidence %></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Institution Information -->
+                <h6 class="text-muted mb-3">
+                    <i class="bi bi-hospital me-2"></i>Issuing Institution
+                </h6>
+
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Institution Name</label>
+                            <div class="fw-bold"><%= institution.name %></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Institution ID</label>
+                            <div class="fw-bold"><%= institution.institutionId %></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- EHIC Request Form -->
+                <form action="/ehic/request" method="POST" id="ehicRequestForm">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-calendar-range me-2"></i>Card Validity
+                    </h6>
+
+                    <div class="alert alert-info mb-3">
+                        <small>
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>About EHIC Expiry:</strong> Your EHIC card will automatically expire on December 31st of next year. When you request a PRC based on this EHIC, you'll specify the entitlement period for that specific travel.
+                        </small>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input type="text" class="form-control" id="expiryDateDisplay" readonly
+                               value="">
+                        <label for="expiryDateDisplay">Card Expiry Date</label>
+                        <div class="form-text">Your EHIC card will be valid until December 31st of next year.</div>
+                        <input type="hidden" id="expiryDate" name="expiryDate" value="">
+                    </div>
+
+                    <div class="alert alert-light border">
+                        <h6 class="mb-2">
+                            <i class="bi bi-check2-circle text-success me-2"></i>What happens next?
+                        </h6>
+                        <ol class="mb-0 small">
+                            <li>Your EHIC request will be submitted to <%= institution.name %></li>
+                            <li>An issuer from the institution will review your request</li>
+                            <li>You will be notified when your EHIC is approved or if additional information is needed</li>
+                            <li>Once approved, you can use your EHIC to request PRCs when traveling</li>
+                        </ol>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send me-2"></i>Submit EHIC Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-question-circle me-2 text-info"></i>
+                    Need Help?
+                </h6>
+                <p class="card-text small mb-2">
+                    <strong>What is an EHIC?</strong><br>
+                    The European Health Insurance Card (EHIC) provides access to medically necessary healthcare during temporary stays in European countries.
+                </p>
+                <p class="card-text small mb-0">
+                    <strong>What is a PRC?</strong><br>
+                    A Provisional Replacement Certificate (PRC) is a temporary document derived from your EHIC, valid for up to 3 months. You'll need an approved EHIC before you can request PRCs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Automatically set expiry date to December 31st of next year
+const today = new Date();
+const nextYear = today.getFullYear() + 1;
+const expiryDate = new Date(nextYear, 11, 31); // December 31st of next year
+
+// Format for display (e.g., "December 31, 2025")
+const displayDate = expiryDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
+
+// Format for form submission (YYYY-MM-DD)
+const isoDate = expiryDate.toISOString().split('T')[0];
+
+// Set the values
+document.getElementById('expiryDateDisplay').value = displayDate;
+document.getElementById('expiryDate').value = isoDate;
+</script>

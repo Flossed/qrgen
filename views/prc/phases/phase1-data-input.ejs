@@ -1,15 +1,97 @@
 <div class="card">
     <div class="card-header">
-        <i class="bi bi-person-lines-fill me-2"></i>
-        Phase 1: Enter PRC Data
+        <i class="bi bi-airplane-fill me-2"></i>
+        <% if (hasEHIC) { %>
+            Request Provisional Replacement Certificate (PRC)
+        <% } else { %>
+            Phase 1: Enter PRC Data
+        <% } %>
     </div>
     <div class="card-body">
-        <p class="text-muted mb-4">
-            Enter the card holder information and validity details according to eEHIC specifications.
-            All required fields must be completed to proceed to JWT generation.
-        </p>
-
         <form id="prcDataForm" action="/prc/create" method="POST">
+
+            <% if (hasEHIC) { %>
+                <!-- Travel Request Form Section (Citizens with EHIC) -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-suitcase me-2"></i>Travel Information
+                    </h5>
+                    <p class="text-muted">
+                        Enter your travel destination and dates. The PRC will be valid for your travel period up to the end of the quarter.
+                    </p>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-floating mb-3">
+                                <select class="form-select" id="destinationCountry" name="destinationCountry" required>
+                                    <option value="">Select destination country</option>
+                                    <% if (typeof countries !== 'undefined' && countries) { %>
+                                        <% countries.forEach(country => { %>
+                                            <option value="<%= country.code %>"
+                                                    <%= prcSession?.formData?.destinationCountry === country.code ? 'selected' : '' %>>
+                                                <%= country.name %>
+                                            </option>
+                                        <% }); %>
+                                    <% } %>
+                                </select>
+                                <label for="destinationCountry">Destination Country *</label>
+                            </div>
+                            <!-- EHIC Coverage Warning -->
+                            <div id="ehicWarning" class="alert alert-warning d-none mb-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> The EHIC is not valid in this destination country.
+                                The EHIC provides healthcare coverage only in EU/EEA countries and Switzerland.
+                                You may still request a PRC for record purposes, but it will not provide healthcare coverage in this destination.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="date" class="form-control" id="travelStartDate" name="travelStartDate" required
+                                       value="<%= prcSession?.formData?.travelStartDate || '' %>">
+                                <label for="travelStartDate">Travel Start Date *</label>
+                                <div class="form-text">When does your travel begin?</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="date" class="form-control" id="travelEndDate" name="travelEndDate" required
+                                       value="<%= prcSession?.formData?.travelEndDate || '' %>">
+                                <label for="travelEndDate">Travel End Date *</label>
+                                <div class="form-text">When does your travel end?</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            <strong>PRC Validity Period:</strong> The PRC will be valid from 1 week before today (issuance date) until the end of the quarter in which your travel ends, or until your EHIC expires (whichever comes first).
+                        </small>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Pre-filled EHIC Data Section -->
+                <div class="bg-light p-4 rounded mb-4" style="background-color: #f8f9fa !important; border: 1px solid #dee2e6;">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-credit-card-2-front me-2 text-primary" style="font-size: 1.5rem;"></i>
+                        <h5 class="mb-0">Card Holder Information (From Your EHIC)</h5>
+                    </div>
+                    <p class="text-muted mb-4">
+                        <small>All information below is automatically populated from your approved EHIC card and cannot be modified.</small>
+                    </p>
+
+            <% } else { %>
+                <!-- Issuer Form - Allow Editing -->
+                <p class="text-muted mb-4">
+                    Enter the card holder information and validity details according to eEHIC specifications.
+                    All required fields must be completed to proceed to JWT generation.
+                </p>
+            <% } %>
+
             <div class="row">
                 <!-- Issuing Member State -->
                 <div class="col-12">
@@ -20,40 +102,41 @@
 
                 <div class="col-md-6">
                     <div class="form-floating mb-3">
-                        <select class="form-select" id="ic" name="ic" required>
+                        <% const selectedCountry = hasEHIC && ehicData ? ehicData.ic : prcSession?.formData?.ic; %>
+                        <select class="form-select" id="ic" name="ic" required <%= hasEHIC ? 'disabled' : '' %>>
                             <option value="">Select issuing country</option>
-                            <option value="AT" <%= prcSession?.formData?.ic === 'AT' ? 'selected' : '' %>>Austria</option>
-                            <option value="BE" <%= prcSession?.formData?.ic === 'BE' ? 'selected' : '' %>>Belgium</option>
-                            <option value="BG" <%= prcSession?.formData?.ic === 'BG' ? 'selected' : '' %>>Bulgaria</option>
-                            <option value="HR" <%= prcSession?.formData?.ic === 'HR' ? 'selected' : '' %>>Croatia</option>
-                            <option value="CY" <%= prcSession?.formData?.ic === 'CY' ? 'selected' : '' %>>Cyprus</option>
-                            <option value="CZ" <%= prcSession?.formData?.ic === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
-                            <option value="DK" <%= prcSession?.formData?.ic === 'DK' ? 'selected' : '' %>>Denmark</option>
-                            <option value="EE" <%= prcSession?.formData?.ic === 'EE' ? 'selected' : '' %>>Estonia</option>
-                            <option value="FI" <%= prcSession?.formData?.ic === 'FI' ? 'selected' : '' %>>Finland</option>
-                            <option value="FR" <%= prcSession?.formData?.ic === 'FR' ? 'selected' : '' %>>France</option>
-                            <option value="DE" <%= prcSession?.formData?.ic === 'DE' ? 'selected' : '' %>>Germany</option>
-                            <option value="GR" <%= prcSession?.formData?.ic === 'GR' ? 'selected' : '' %>>Greece</option>
-                            <option value="HU" <%= prcSession?.formData?.ic === 'HU' ? 'selected' : '' %>>Hungary</option>
-                            <option value="IE" <%= prcSession?.formData?.ic === 'IE' ? 'selected' : '' %>>Ireland</option>
-                            <option value="IT" <%= prcSession?.formData?.ic === 'IT' ? 'selected' : '' %>>Italy</option>
-                            <option value="LV" <%= prcSession?.formData?.ic === 'LV' ? 'selected' : '' %>>Latvia</option>
-                            <option value="LT" <%= prcSession?.formData?.ic === 'LT' ? 'selected' : '' %>>Lithuania</option>
-                            <option value="LU" <%= prcSession?.formData?.ic === 'LU' ? 'selected' : '' %>>Luxembourg</option>
-                            <option value="MT" <%= prcSession?.formData?.ic === 'MT' ? 'selected' : '' %>>Malta</option>
-                            <option value="NL" <%= prcSession?.formData?.ic === 'NL' ? 'selected' : '' %>>Netherlands</option>
-                            <option value="PL" <%= prcSession?.formData?.ic === 'PL' ? 'selected' : '' %>>Poland</option>
-                            <option value="PT" <%= prcSession?.formData?.ic === 'PT' ? 'selected' : '' %>>Portugal</option>
-                            <option value="RO" <%= prcSession?.formData?.ic === 'RO' ? 'selected' : '' %>>Romania</option>
-                            <option value="SK" <%= prcSession?.formData?.ic === 'SK' ? 'selected' : '' %>>Slovakia</option>
-                            <option value="SI" <%= prcSession?.formData?.ic === 'SI' ? 'selected' : '' %>>Slovenia</option>
-                            <option value="ES" <%= prcSession?.formData?.ic === 'ES' ? 'selected' : '' %>>Spain</option>
-                            <option value="SE" <%= prcSession?.formData?.ic === 'SE' ? 'selected' : '' %>>Sweden</option>
-                            <option value="IS" <%= prcSession?.formData?.ic === 'IS' ? 'selected' : '' %>>Iceland</option>
-                            <option value="LI" <%= prcSession?.formData?.ic === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
-                            <option value="NO" <%= prcSession?.formData?.ic === 'NO' ? 'selected' : '' %>>Norway</option>
-                            <option value="CH" <%= prcSession?.formData?.ic === 'CH' ? 'selected' : '' %>>Switzerland</option>
-                            <option value="UK" <%= prcSession?.formData?.ic === 'UK' ? 'selected' : '' %>>United Kingdom</option>
+                            <option value="AT" <%= selectedCountry === 'AT' ? 'selected' : '' %>>Austria</option>
+                            <option value="BE" <%= selectedCountry === 'BE' ? 'selected' : '' %>>Belgium</option>
+                            <option value="BG" <%= selectedCountry === 'BG' ? 'selected' : '' %>>Bulgaria</option>
+                            <option value="HR" <%= selectedCountry === 'HR' ? 'selected' : '' %>>Croatia</option>
+                            <option value="CY" <%= selectedCountry === 'CY' ? 'selected' : '' %>>Cyprus</option>
+                            <option value="CZ" <%= selectedCountry === 'CZ' ? 'selected' : '' %>>Czech Republic</option>
+                            <option value="DK" <%= selectedCountry === 'DK' ? 'selected' : '' %>>Denmark</option>
+                            <option value="EE" <%= selectedCountry === 'EE' ? 'selected' : '' %>>Estonia</option>
+                            <option value="FI" <%= selectedCountry === 'FI' ? 'selected' : '' %>>Finland</option>
+                            <option value="FR" <%= selectedCountry === 'FR' ? 'selected' : '' %>>France</option>
+                            <option value="DE" <%= selectedCountry === 'DE' ? 'selected' : '' %>>Germany</option>
+                            <option value="GR" <%= selectedCountry === 'GR' ? 'selected' : '' %>>Greece</option>
+                            <option value="HU" <%= selectedCountry === 'HU' ? 'selected' : '' %>>Hungary</option>
+                            <option value="IE" <%= selectedCountry === 'IE' ? 'selected' : '' %>>Ireland</option>
+                            <option value="IT" <%= selectedCountry === 'IT' ? 'selected' : '' %>>Italy</option>
+                            <option value="LV" <%= selectedCountry === 'LV' ? 'selected' : '' %>>Latvia</option>
+                            <option value="LT" <%= selectedCountry === 'LT' ? 'selected' : '' %>>Lithuania</option>
+                            <option value="LU" <%= selectedCountry === 'LU' ? 'selected' : '' %>>Luxembourg</option>
+                            <option value="MT" <%= selectedCountry === 'MT' ? 'selected' : '' %>>Malta</option>
+                            <option value="NL" <%= selectedCountry === 'NL' ? 'selected' : '' %>>Netherlands</option>
+                            <option value="PL" <%= selectedCountry === 'PL' ? 'selected' : '' %>>Poland</option>
+                            <option value="PT" <%= selectedCountry === 'PT' ? 'selected' : '' %>>Portugal</option>
+                            <option value="RO" <%= selectedCountry === 'RO' ? 'selected' : '' %>>Romania</option>
+                            <option value="SK" <%= selectedCountry === 'SK' ? 'selected' : '' %>>Slovakia</option>
+                            <option value="SI" <%= selectedCountry === 'SI' ? 'selected' : '' %>>Slovenia</option>
+                            <option value="ES" <%= selectedCountry === 'ES' ? 'selected' : '' %>>Spain</option>
+                            <option value="SE" <%= selectedCountry === 'SE' ? 'selected' : '' %>>Sweden</option>
+                            <option value="IS" <%= selectedCountry === 'IS' ? 'selected' : '' %>>Iceland</option>
+                            <option value="LI" <%= selectedCountry === 'LI' ? 'selected' : '' %>>Liechtenstein</option>
+                            <option value="NO" <%= selectedCountry === 'NO' ? 'selected' : '' %>>Norway</option>
+                            <option value="CH" <%= selectedCountry === 'CH' ? 'selected' : '' %>>Switzerland</option>
+                            <option value="UK" <%= selectedCountry === 'UK' ? 'selected' : '' %>>United Kingdom</option>
                         </select>
                         <label for="ic">Issuing Country *</label>
                     </div>
@@ -70,6 +153,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="fn" name="fn"
                                placeholder="Family name" required maxlength="40"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.fn || user?.lastName || '' %>">
                         <label for="fn">Family Name *</label>
                     </div>
@@ -79,6 +163,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="gn" name="gn"
                                placeholder="Given name(s)" required maxlength="40"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.gn || user?.firstName || '' %>">
                         <label for="gn">Given Name(s) *</label>
                     </div>
@@ -88,6 +173,7 @@
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="dob" name="dob"
                                placeholder="Date of birth" required
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.dob || user?.dateOfBirth || '' %>">
                         <label for="dob">Date of Birth *</label>
                     </div>
@@ -97,6 +183,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="hi" name="hi"
                                placeholder="Personal identification number" required maxlength="20"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.hi || '' %>">
                         <label for="hi">Personal ID Number *</label>
                     </div>
@@ -113,6 +200,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="in" name="in"
                                placeholder="Institution name" required maxlength="25"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.in || user?.institutionName || '' %>">
                         <label for="in">Institution Name *</label>
                     </div>
@@ -122,6 +210,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="ii" name="ii"
                                placeholder="Institution ID" required maxlength="10"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.ii || user?.institutionId || '' %>">
                         <label for="ii">Institution ID *</label>
                     </div>
@@ -130,7 +219,7 @@
                 <!-- Card Information (Optional) -->
                 <div class="col-12 mt-3">
                     <h6 class="text-muted mb-3">
-                        <i class="bi bi-credit-card me-2"></i>Card Information (Optional)
+                        <i class="bi bi-credit-card me-2"></i>Card Information
                     </h6>
                 </div>
 
@@ -138,6 +227,7 @@
                     <div class="form-floating mb-3">
                         <input type="text" class="form-control" id="ci" name="ci"
                                placeholder="Card identification number" maxlength="20"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.ci || '' %>">
                         <label for="ci">Card ID Number</label>
                     </div>
@@ -147,24 +237,37 @@
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="xd" name="xd"
                                placeholder="Card expiry date"
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.xd || '' %>">
                         <label for="xd">Card Expiry Date</label>
                     </div>
                 </div>
 
-                <!-- Validity Period -->
+                <!-- Validity Period (Hidden for Citizens - calculated from travel dates) -->
                 <div class="col-12 mt-3">
                     <h6 class="text-muted mb-3">
                         <i class="bi bi-calendar-range me-2"></i>Certificate Validity Period
                     </h6>
+                    <% if (hasEHIC) { %>
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <small>
+                                <strong>Auto-calculated:</strong> The PRC will be valid from 1 week before today (issuance date) until the end of the quarter in which your travel ends, or your EHIC expiry date (whichever is earlier).
+                            </small>
+                        </div>
+                    <% } %>
                 </div>
 
                 <div class="col-md-4">
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="sd" name="sd"
                                placeholder="Start date" required
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.sd || '' %>">
                         <label for="sd">Start Date *</label>
+                        <% if (hasEHIC) { %>
+                            <div class="form-text">1 week before today</div>
+                        <% } %>
                     </div>
                 </div>
 
@@ -172,43 +275,77 @@
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="ed" name="ed"
                                placeholder="End date" required
+                               <%= hasEHIC ? 'readonly' : '' %>
                                value="<%= prcSession?.formData?.ed || '' %>">
                         <label for="ed">End Date *</label>
+                        <% if (hasEHIC) { %>
+                            <div class="form-text">End of quarter (max: EHIC expiry)</div>
+                        <% } %>
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="di" name="di"
-                               placeholder="Issue date" required
+                               placeholder="Issue date" required readonly
                                value="<%= prcSession?.formData?.di || new Date().toISOString().split('T')[0] %>">
                         <label for="di">Issue Date *</label>
+                        <div class="form-text">Today's date</div>
                     </div>
                 </div>
 
-                <!-- Validation Summary -->
-                <div class="col-12 mt-3">
-                    <div id="validationSummary" class="alert alert-info d-none">
-                        <h6><i class="bi bi-info-circle me-2"></i>Validation Summary</h6>
-                        <ul id="validationList" class="mb-0"></ul>
+                <% if (hasEHIC) { %>
+                    </div> <!-- Close pre-filled section -->
+                <% } %>
+
+                <% if (!hasEHIC) { %>
+                    <!-- Validation Summary (Issuers only) -->
+                    <div class="col-12 mt-3">
+                        <div id="validationSummary" class="alert alert-info d-none">
+                            <h6><i class="bi bi-info-circle me-2"></i>Validation Summary</h6>
+                            <ul id="validationList" class="mb-0"></ul>
+                        </div>
                     </div>
-                </div>
+                <% } %>
 
                 <!-- Form Actions -->
                 <div class="col-12 mt-4">
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-primary" onclick="validateForm()">
-                            <i class="bi bi-check-circle me-2"></i>Validate Data
-                        </button>
-                        <button type="submit" class="btn btn-primary" id="saveAndContinue" disabled>
-                            <span class="btn-text">
-                                <i class="bi bi-save me-2"></i>Save & Continue
-                            </span>
-                            <span class="loading-spinner">
-                                <i class="bi bi-arrow-clockwise spin me-2"></i>Saving...
-                            </span>
-                        </button>
-                    </div>
+                    <% if (hasEHIC) { %>
+                        <!-- Citizens: Simple submit -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="saveAndContinue">
+                                <span class="btn-text">
+                                    <i class="bi bi-send me-2"></i>Request PRC
+                                </span>
+                                <span class="loading-spinner">
+                                    <i class="bi bi-arrow-clockwise spin me-2"></i>Submitting...
+                                </span>
+                            </button>
+                        </div>
+                    <% } else { %>
+                        <!-- Issuers: Validation + Submit -->
+                        <div class="d-flex justify-content-between">
+                            <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary me-2" onclick="validateForm()">
+                                    <i class="bi bi-check-circle me-2"></i>Validate Data
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="saveAndContinue" disabled>
+                                    <span class="btn-text">
+                                        <i class="bi bi-save me-2"></i>Save & Continue
+                                    </span>
+                                    <span class="loading-spinner">
+                                        <i class="bi bi-arrow-clockwise spin me-2"></i>Saving...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </form>
@@ -216,18 +353,130 @@
 </div>
 
 <script>
+// Global variable for EHIC status
+const hasEHIC = <%= hasEHIC ? 'true' : 'false' %>;
+
+// EHIC covered countries
+const EHIC_COVERED_COUNTRIES = [
+    'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+    'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK',
+    'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'
+];
+
+// Check if destination country is covered by EHIC
+function checkEHICCoverage() {
+    const destinationSelect = document.getElementById('destinationCountry');
+    const warningDiv = document.getElementById('ehicWarning');
+
+    if (!destinationSelect || !warningDiv) return;
+
+    const selectedCountry = destinationSelect.value;
+
+    if (selectedCountry && !EHIC_COVERED_COUNTRIES.includes(selectedCountry)) {
+        warningDiv.classList.remove('d-none');
+    } else {
+        warningDiv.classList.add('d-none');
+    }
+}
+
+// Calculate PRC validity period based on travel dates
+function calculatePRCValidity() {
+    if (!hasEHIC) return;
+
+    const travelStartField = document.getElementById('travelStartDate');
+    const travelEndField = document.getElementById('travelEndDate');
+    const sdField = document.getElementById('sd');
+    const edField = document.getElementById('ed');
+    const xdField = document.getElementById('xd');
+
+    if (!travelStartField || !travelEndField || !sdField || !edField) return;
+
+    const travelStart = travelStartField.value;
+    const travelEnd = travelEndField.value;
+
+    if (!travelStart || !travelEnd) return;
+
+    // PRC start date = 1 week before today (issuance date)
+    const today = new Date();
+    const prcStartDate = new Date(today);
+    prcStartDate.setDate(prcStartDate.getDate() - 7); // 1 week before today
+    sdField.value = prcStartDate.toISOString().split('T')[0];
+
+    // PRC end date = end of quarter containing travel end date
+    const travelEndDate = new Date(travelEnd);
+    const month = travelEndDate.getMonth(); // 0-11
+    const quarter = Math.floor(month / 3); // 0-3
+
+    // Calculate end of quarter
+    let quarterEndMonth = (quarter + 1) * 3; // 3, 6, 9, 12
+    let quarterEndYear = travelEndDate.getFullYear();
+
+    // If it's Q4, quarterEndMonth is 12, need to set to December (11)
+    if (quarterEndMonth === 12) {
+        quarterEndMonth = 11; // December
+    } else if (quarterEndMonth > 12) {
+        quarterEndMonth = 2; // March of next year
+        quarterEndYear++;
+    }
+
+    // Last day of the quarter month
+    const quarterEndDate = new Date(quarterEndYear, quarterEndMonth, 0);
+    if (quarterEndMonth === 11) { // December
+        quarterEndDate.setDate(31);
+    } else {
+        quarterEndDate.setDate(new Date(quarterEndYear, quarterEndMonth + 1, 0).getDate());
+    }
+
+    // Cap at EHIC expiry if available
+    let prcEndDate = quarterEndDate;
+    if (xdField && xdField.value) {
+        const ehicExpiry = new Date(xdField.value);
+        if (quarterEndDate > ehicExpiry) {
+            prcEndDate = ehicExpiry;
+        }
+    }
+
+    edField.value = prcEndDate.toISOString().split('T')[0];
+}
+
 // Phase 1 specific validation
 window.validatePhase1 = function() {
-    const requiredFields = ['ic', 'fn', 'gn', 'dob', 'hi', 'in', 'ii', 'sd', 'ed', 'di'];
+    // Citizens with EHIC only need to fill travel fields
+    if (hasEHIC) {
+        const destinationCountry = document.getElementById('destinationCountry')?.value;
+        const travelStartDate = document.getElementById('travelStartDate')?.value;
+        const travelEndDate = document.getElementById('travelEndDate')?.value;
+
+        if (!destinationCountry || !travelStartDate || !travelEndDate) {
+            return false;
+        }
+
+        // Validate travel dates
+        if (travelStartDate && travelEndDate) {
+            const startDate = new Date(travelStartDate);
+            const endDate = new Date(travelEndDate);
+
+            if (startDate >= endDate) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Issuers need all fields validated
+    let requiredFields = ['ic', 'fn', 'gn', 'dob', 'hi', 'in', 'ii', 'sd', 'ed', 'di'];
+
     let isValid = true;
     const errors = [];
 
-    // Check required fields
+    // Check required fields (issuers only at this point)
     requiredFields.forEach(fieldName => {
         const field = document.getElementById(fieldName);
         if (!field || !field.value.trim()) {
             isValid = false;
-            errors.push(`${field?.labels[0]?.textContent || fieldName} is required`);
+            const label = field?.labels?.[0]?.textContent || field?.previousElementSibling?.textContent || fieldName;
+            errors.push(`${label} is required`);
         }
     });
 
@@ -238,12 +487,12 @@ window.validatePhase1 = function() {
     const diField = document.getElementById('di');
     const xdField = document.getElementById('xd');
 
-    if (dobField.value && sdField.value && edField.value && diField.value) {
+    if (dobField?.value && sdField?.value && edField?.value && diField?.value) {
         const dob = new Date(dobField.value);
         const sd = new Date(sdField.value);
         const ed = new Date(edField.value);
         const di = new Date(diField.value);
-        const xd = xdField.value ? new Date(xdField.value) : null;
+        const xd = xdField?.value ? new Date(xdField.value) : null;
 
         if (dob > sd) {
             isValid = false;
@@ -306,11 +555,9 @@ window.validateForm = function() {
 }
 
 function updateValidationSummary(isValid, errors) {
-    // Try to find the validation summary elements
     const summaryEl = document.getElementById('validationSummary');
     const listEl = document.getElementById('validationList');
 
-    // If elements exist, update them
     if (summaryEl && listEl) {
         if (errors.length > 0) {
             listEl.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
@@ -322,13 +569,6 @@ function updateValidationSummary(isValid, errors) {
             summaryEl.classList.remove('d-none');
         } else {
             summaryEl.classList.add('d-none');
-        }
-    } else {
-        // Fallback: show validation results in console for debugging
-        if (errors.length > 0) {
-            console.warn('Validation errors:', errors);
-        } else if (isValid) {
-            console.log('Validation passed!');
         }
     }
 }
@@ -355,6 +595,23 @@ if (typeof user !== 'undefined' && user.role === 'issuer') {
 // Set default issue date to today
 document.getElementById('di').value = document.getElementById('di').value || new Date().toISOString().split('T')[0];
 
+// EHIC coverage check on destination change
+const destinationSelect = document.getElementById('destinationCountry');
+if (destinationSelect) {
+    destinationSelect.addEventListener('change', checkEHICCoverage);
+    checkEHICCoverage(); // Check on load
+}
+
+// Calculate PRC validity when travel dates change
+const travelStartField = document.getElementById('travelStartDate');
+const travelEndField = document.getElementById('travelEndDate');
+
+if (travelStartField && travelEndField) {
+    travelStartField.addEventListener('change', calculatePRCValidity);
+    travelEndField.addEventListener('change', calculatePRCValidity);
+    calculatePRCValidity(); // Calculate on load if values exist
+}
+
 // Debounce helper function
 function debounce(func, wait) {
     let timeout;
@@ -368,16 +625,41 @@ function debounce(func, wait) {
     };
 }
 
-// Real-time validation on input
-document.addEventListener('input', debounce(window.validateForm, 500));
-document.addEventListener('change', window.validateForm);
+// Real-time validation on input (only for issuers)
+if (!hasEHIC) {
+    document.addEventListener('input', debounce(window.validateForm, 500));
+    document.addEventListener('change', window.validateForm);
+} else {
+    // For citizens, enable submit button when travel fields are filled
+    document.addEventListener('input', debounce(window.validateForm, 500));
+    document.addEventListener('change', window.validateForm);
+}
 
 // Form submission
 document.getElementById('prcDataForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    if (!window.validateForm()) {
-        return false;
+    // Citizens with EHIC: only validate travel fields
+    if (hasEHIC) {
+        const destinationCountry = document.getElementById('destinationCountry')?.value;
+        const travelStartDate = document.getElementById('travelStartDate')?.value;
+        const travelEndDate = document.getElementById('travelEndDate')?.value;
+
+        if (!destinationCountry || !travelStartDate || !travelEndDate) {
+            alert('Please fill in all travel information.');
+            return false;
+        }
+
+        // Check travel dates
+        if (new Date(travelStartDate) >= new Date(travelEndDate)) {
+            alert('Travel end date must be after travel start date.');
+            return false;
+        }
+    } else {
+        // Issuers: full validation
+        if (!window.validateForm()) {
+            return false;
+        }
     }
 
     const submitBtn = document.getElementById('saveAndContinue');
@@ -388,11 +670,20 @@ document.getElementById('prcDataForm').addEventListener('submit', function(e) {
         submitBtn.classList.add('loading');
     }
 
+    // Temporarily enable disabled fields to include them in form data
+    const disabledFields = this.querySelectorAll('[disabled]');
+    disabledFields.forEach(field => field.disabled = false);
+
     // Collect form data
     const formData = new FormData(this);
     const data = Object.fromEntries(formData);
 
+    // Re-disable the fields
+    disabledFields.forEach(field => field.disabled = true);
+
     // Submit via AJAX
+    console.log('Submitting PRC request with data:', data);
+
     fetch('/prc/create', {
         method: 'POST',
         headers: {
@@ -400,10 +691,19 @@ document.getElementById('prcDataForm').addEventListener('submit', function(e) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(result => {
+        console.log('Response result:', result);
         if (result.success) {
-            window.location.href = '/prc/generate?phase=2';
+            // Citizens go to dashboard, issuers continue to generation
+            if (hasEHIC) {
+                window.location.href = '/prc/dashboard';
+            } else {
+                window.location.href = '/prc/generate?phase=2';
+            }
         } else {
             if (typeof setLoading === 'function') {
                 setLoading(submitBtn, false);
@@ -413,11 +713,15 @@ document.getElementById('prcDataForm').addEventListener('submit', function(e) {
             }
             // Show errors
             if (result.errors) {
+                const errorMessages = result.errors.map(e => e.message).join('\n');
+                alert('Validation errors:\n' + errorMessages);
                 result.errors.forEach(error => {
                     if (typeof showFieldError === 'function') {
                         showFieldError(error.field, error.message);
                     }
                 });
+            } else {
+                alert('An error occurred. Please check the form and try again.');
             }
         }
     })
@@ -428,12 +732,23 @@ document.getElementById('prcDataForm').addEventListener('submit', function(e) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('loading');
         }
-        console.warn('Form submission error:', error);
-        alert('An error occurred while saving data. Please try again.');
+        console.error('Form submission error:', error);
+        alert('An error occurred while saving data. Please try again.\n' + error.message);
     });
 });
 
 // Initialize validation on load
-setTimeout(window.validateForm, 100);
+if (hasEHIC) {
+    // For citizens, enable submit button immediately (only travel fields required)
+    const submitBtn = document.getElementById('saveAndContinue');
+    if (submitBtn) {
+        submitBtn.disabled = false;
+    }
+    // Still run validation to enable/disable based on travel fields
+    setTimeout(window.validateForm, 100);
+} else {
+    // For issuers, validate to determine initial button state
+    setTimeout(window.validateForm, 100);
+}
 }); // End DOMContentLoaded
 </script>

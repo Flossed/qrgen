@@ -53,24 +53,10 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// Middleware to check if user can manage certificates (only issuers, not Domain Owners)
+// Middleware to check if user can manage certificates (issuers and admins)
 const canManageCertificates = (req, res, next) => {
-    if (req.user && req.user.role === 'issuer') {
+    if (req.user && (req.user.role === 'issuer' || req.user.role === 'admin')) {
         return next();
-    } else if (req.user && req.user.role === 'admin') {
-        // Domain Owners should not manage certificates
-        logger.warn('Domain Owner attempted to access certificate management', {
-            userId: req.user._id,
-            route: req.originalUrl
-        });
-        return res.status(403).render('errorPage', {
-            title: 'Access Denied',
-            error: {
-                status: 403,
-                message: 'Domain Owners do not manage certificates. This function is reserved for issuers who generate PRCs.'
-            },
-            user: req.user
-        });
     } else {
         return res.status(403).render('errorPage', {
             title: 'Access Denied',

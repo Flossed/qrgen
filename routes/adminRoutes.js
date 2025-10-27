@@ -119,7 +119,7 @@ router.get('/reports', isAuthenticated, isSystemAdmin, async (req, res) => {
         const stats = {
             totalInstitutions: await HealthcareInstitution.countDocuments(),
             totalIssuers: await User.countDocuments({ role: 'issuer' }),
-            totalUsers: await User.countDocuments({ role: 'user' }),
+            totalCitizens: await User.countDocuments({ role: 'citizen' }),
             pendingCreationRequests: await InstitutionRequest.countDocuments({
                 requestType: 'create',
                 status: 'pending'

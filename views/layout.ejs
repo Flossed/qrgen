@@ -256,17 +256,41 @@
                                     Dashboard
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/prc/generate">
-                                    <i class="bi bi-qr-code me-1"></i>
-                                    Generate PRC
-                                </a>
-                            </li>
+                            <% if (user.role === 'citizen' || user.role === 'user') { %>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="ehicDropdown" role="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-credit-card-2-front me-1"></i>
+                                        EHIC
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="/ehic/my-ehic">
+                                            <i class="bi bi-credit-card me-2"></i>My EHIC
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="/ehic/request">
+                                            <i class="bi bi-plus-circle me-2"></i>Request EHIC
+                                        </a></li>
+                                    </ul>
+                                </li>
+                            <% } %>
+                            <% if (user.role === 'issuer') { %>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/prc/generate">
+                                        <i class="bi bi-qr-code me-1"></i>
+                                        Generate PRC
+                                    </a>
+                                </li>
+                            <% } %>
                             <% if (user.role === 'issuer') { %>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/certificates">
                                         <i class="bi bi-key me-1"></i>
                                         Certificates
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/ehic/pending">
+                                        <i class="bi bi-credit-card-2-front me-1"></i>
+                                        Pending EHICs
                                     </a>
                                 </li>
                                 <li class="nav-item dropdown">
@@ -383,7 +407,7 @@
                     </p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <small class="text-muted">
+                    <small style="color: #f5f5f5;">
                         Version 1.0.0 | Built with ❤️ for European healthcare
                     </small>
                 </div>

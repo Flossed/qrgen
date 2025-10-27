@@ -1,12 +1,25 @@
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-danger bg-opacity-10">
-                <h5 class="mb-0">
-                    <i class="bi bi-shield-exclamation me-2"></i>Pending Institution Creation Requests
-                </h5>
-            </div>
-            <div class="card-body">
+<style>
+    .admin-page-background {
+        background-color: #ffe5e5;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+        margin: -2rem -15px 0 -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+</style>
+
+<div class="admin-page-background">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background-color: #6c757d; color: white;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clipboard-check me-2"></i>Pending Institution Creation Requests
+                        </h5>
+                    </div>
+                    <div class="card-body">
                 <% if (requests.length === 0) { %>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
@@ -50,16 +63,18 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4 text-end">
-                                        <button type="button" class="btn btn-sm btn-success mb-2"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#approveModal-<%= request._id %>">
-                                            <i class="bi bi-check-circle me-1"></i>Approve
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#rejectModal-<%= request._id %>">
-                                            <i class="bi bi-x-circle me-1"></i>Reject
-                                        </button>
+                                        <div class="d-flex flex-column gap-2">
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#approveModal-<%= request._id %>">
+                                                <i class="bi bi-check-circle me-1"></i>Approve
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#rejectModal-<%= request._id %>">
+                                                <i class="bi bi-x-circle me-1"></i>Reject
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -142,10 +157,12 @@
                 <% } %>
 
                 <div class="mt-4">
-                    <a href="/prc/dashboard" class="btn btn-outline-secondary">
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
                     </a>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>

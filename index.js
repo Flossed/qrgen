@@ -15,7 +15,7 @@ const appLogger = getLogger('App');
 logEntry('main', { version: packageJson.version, nodeEnv: process.env.NODE_ENV });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4400;
 
 appLogger.info('Initializing PRC Generator Application', {
     version: packageJson.version,
@@ -151,6 +151,11 @@ app.use('/auth', authRoutes);
 appLogger.trace('Registering PRC routes');
 const prcRoutes = require('./routes/prcRoutes');
 app.use('/prc', prcRoutes);
+
+// EHIC routes (European Health Insurance Card)
+appLogger.trace('Registering EHIC routes');
+const ehicRoutes = require('./routes/ehicRoutes');
+app.use('/ehic', ehicRoutes);
 
 // Root redirect
 app.get('/', (req, res) => {

@@ -1,0 +1,107 @@
+<style>
+    .admin-page-background {
+        background-color: #ffe5e5;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+        margin: -2rem -15px 0 -15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+</style>
+
+<div class="admin-page-background">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header" style="background-color: #6c757d; color: white;">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people me-2"></i>Manage Issuers
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <% if (issuers.length === 0) { %>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No issuers have been registered yet.
+                            </div>
+                        <% } else { %>
+                            <p class="text-muted mb-4">
+                                Total Issuers: <strong><%= issuers.length %></strong>
+                            </p>
+
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Institution</th>
+                                            <th>Country</th>
+                                            <th>Organization</th>
+                                            <th>Registered Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% issuers.forEach(issuer => { %>
+                                            <tr>
+                                                <td>
+                                                    <strong><%= issuer.firstName %> <%= issuer.lastName %></strong>
+                                                </td>
+                                                <td>
+                                                    <code><%= issuer.username %></code>
+                                                </td>
+                                                <td>
+                                                    <small><%= issuer.email %></small>
+                                                </td>
+                                                <td>
+                                                    <% if (issuer.institutionId) { %>
+                                                        <code><%= issuer.institutionId %></code>
+                                                    <% } else { %>
+                                                        <small class="text-muted">Not assigned</small>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (issuer.country) { %>
+                                                        <span class="badge bg-primary"><%= issuer.country %></span>
+                                                    <% } else { %>
+                                                        <small class="text-muted">-</small>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (issuer.organization) { %>
+                                                        <small><%= issuer.organization %></small>
+                                                    <% } else { %>
+                                                        <small class="text-muted">-</small>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <small><%= new Date(issuer.createdAt).toLocaleDateString() %></small>
+                                                </td>
+                                                <td>
+                                                    <% if (issuer.isActive) { %>
+                                                        <span class="badge bg-success">Active</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-secondary">Inactive</span>
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% } %>
+
+                        <div class="mt-4">
+                            <a href="/admin/dashboard" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

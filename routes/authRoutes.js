@@ -123,10 +123,17 @@ router.post('/login', [
             });
         }
 
-        // Redirect to return URL or dashboard
-        const redirectTo = req.session.returnTo || '/prc/dashboard';
-        delete req.session.returnTo;
-        logger.debug('Redirecting after login', { redirectTo });
+        // Redirect based on user role
+        let redirectTo;
+        if (req.session.returnTo) {
+            redirectTo = req.session.returnTo;
+            delete req.session.returnTo;
+        } else {
+            // Redirect to appropriate dashboard based on role
+            redirectTo = user.role === 'admin' ? '/admin/dashboard' : '/prc/dashboard';
+        }
+
+        logger.debug('Redirecting after login', { redirectTo, role: user.role });
 
         logExit('POST /auth/login', { success: true }, logger);
         res.redirect(redirectTo);
@@ -197,7 +204,7 @@ router.post('/register', [
         .withMessage('Organization name must be less than 100 characters')
         .trim(),
     body('role')
-        .isIn(['user', 'issuer'])
+        .isIn(['citizen', 'issuer'])
         .withMessage('Invalid role selected')
 ], async (req, res) => {
     logEntry('POST /auth/register', { username: req.body.username, email: req.body.email, role: req.body.role }, logger);
@@ -268,10 +275,11 @@ router.post('/register', [
         req.session.userId = user._id;
         logger.debug('Session created', { sessionId: req.sessionID });
 
-        // Redirect to dashboard
-        logger.debug('Redirecting to dashboard');
+        // Redirect to appropriate dashboard based on role
+        const redirectTo = user.role === 'admin' ? '/admin/dashboard' : '/prc/dashboard';
+        logger.debug('Redirecting to dashboard', { redirectTo, role: user.role });
         logExit('POST /auth/register', { success: true }, logger);
-        res.redirect('/prc/dashboard');
+        res.redirect(redirectTo);
 
     } catch (error) {
         logException('POST /auth/register', error, { username: req.body.username, email: req.body.email }, logger);
@@ -625,6 +633,12 @@ router.post('/profile', [
 
         req.session.success = 'Profile updated successfully';
         logExit('POST /auth/profile', { success: true }, logger);
+
+        // Redirect to dashboard for citizens/users to continue onboarding flow
+        if (user.role === 'citizen' || user.role === 'user') {
+            return res.redirect('/prc/dashboard');
+        }
+
         res.redirect('/auth/profile');
 
     } catch (error) {
