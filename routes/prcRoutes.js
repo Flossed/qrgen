@@ -3,6 +3,7 @@ const router = express.Router();
 const PRC = require('../models/PRC');
 const Certificate = require('../models/Certificate');
 const EHIC = require('../models/EHIC');
+const PRCRequest = require('../models/PRCRequest');
 const { isAuthenticated, blockAdminFromPRC } = require('../middleware/auth');
 const { checkOnboardingComplete } = require('../middleware/onboarding');
 const { body, validationResult } = require('express-validator');
@@ -40,7 +41,6 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
                 .populate('generatedBy', 'firstName lastName');
 
             // Also get PRCs linked through approved PRC requests
-            const PRCRequest = require('../models/PRCRequest');
             const approvedRequests = await PRCRequest.find({
                 citizenId: req.user._id,
                 status: 'approved',
@@ -128,7 +128,6 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             });
 
             const HealthcareInstitution = require('../models/HealthcareInstitution');
-            const PRCRequest = require('../models/PRCRequest');
 
             issuerInstitution = await HealthcareInstitution.findOne({
                 institutionId: req.user.institutionId,
@@ -145,8 +144,44 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             }
         }
 
+        // Get issuer dashboard metrics
+        let issuerMetrics = null;
+        if (req.user.role === 'issuer' && issuerInstitution) {
+            const User = require('../models/User');
+
+            // Total pending requests (EHIC + PRC)
+            const totalPendingRequests = pendingEHICRequests.length + pendingPRCRequests.length;
+
+            // Count registered users (citizens) connected to this institution
+            const registeredUsers = await User.countDocuments({
+                role: { $in: ['citizen', 'user'] },
+                assignedInstitution: issuerInstitution._id,
+                institutionRegistered: true
+            });
+
+            // Count issued EHICs (approved EHICs)
+            const issuedEHICs = await EHIC.countDocuments({
+                institution: issuerInstitution._id,
+                status: 'approved'
+            });
+
+            // Count issued PRCs (approved PRCs)
+            const issuedPRCs = await PRCRequest.countDocuments({
+                institutionId: issuerInstitution._id,
+                status: 'approved'
+            });
+
+            issuerMetrics = {
+                totalPendingRequests,
+                registeredUsers,
+                issuedEHICs,
+                issuedPRCs
+            };
+
+            logger.debug('Issuer metrics calculated', issuerMetrics);
+        }
+
         // Build recent activity feed
-        const PRCRequest = require('../models/PRCRequest');
         const recentActivity = [];
 
         // For citizens: their own activities
@@ -273,7 +308,8 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             pendingEHICRequests: pendingEHICRequests,
             pendingPRCRequests: pendingPRCRequests,
             issuerInstitution: issuerInstitution,
-            recentActivity: limitedActivity
+            recentActivity: limitedActivity,
+            issuerMetrics: issuerMetrics
         });
 
         logExit('GET /dashboard', null, logger);
@@ -618,7 +654,6 @@ router.post('/create', isAuthenticated, checkOnboardingComplete, [
 
         // Citizens: Create a PRC request for approval
         if (req.user.role === 'citizen' || req.user.role === 'user') {
-            const PRCRequest = require('../models/PRCRequest');
             const activeEHIC = await EHIC.findActiveByCitizen(req.user._id);
 
             if (!activeEHIC) {
@@ -1080,6 +1115,7 @@ router.post('/finalize', isAuthenticated, [
 router.get('/history', isAuthenticated, async (req, res) => {
     try {
         let prcs = [];
+        let ehics = [];
         let title = 'PRC History';
 
         if (req.user.role === 'citizen' || req.user.role === 'user') {
@@ -1094,7 +1130,6 @@ router.get('/history', isAuthenticated, async (req, res) => {
             logger.info('PRCs found by citizenId', { count: prcs.length, userId: req.user._id });
 
             // Also get PRCs linked through approved PRC requests
-            const PRCRequest = require('../models/PRCRequest');
             const approvedRequests = await PRCRequest.find({
                 citizenId: req.user._id,
                 status: 'approved',
@@ -1137,30 +1172,56 @@ router.get('/history', isAuthenticated, async (req, res) => {
             // Sort combined list
             prcs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             logger.info('Final PRC count for citizen', { count: prcs.length });
+
+            // Also fetch approved EHICs for citizens
+            ehics = await EHIC.find({
+                citizenId: req.user._id,
+                status: 'approved'
+            })
+                .sort({ createdAt: -1 })
+                .populate('institution', 'name institutionId country')
+                .populate('reviewedBy', 'firstName lastName');
+
+            logger.info('EHICs found for citizen', { count: ehics.length, userId: req.user._id });
         } else {
             // Issuers/admins see PRCs they generated
             prcs = await PRC.find({ generatedBy: req.user._id })
                 .sort({ createdAt: -1 })
                 .populate('certificateId', 'name');
+
+            // Issuers see EHICs from their institution
+            if (req.user.institutionId) {
+                ehics = await EHIC.find({
+                    institution: req.user.institutionId,
+                    status: 'approved'
+                })
+                    .sort({ createdAt: -1 })
+                    .populate('citizenId', 'firstName lastName email')
+                    .populate('reviewedBy', 'firstName lastName');
+
+                logger.info('EHICs found for issuer institution', { count: ehics.length, userId: req.user._id });
+            }
         }
 
-        logger.info('PRC history fetched', {
+        logger.info('Document history fetched', {
             userId: req.user._id,
             role: req.user.role,
-            count: prcs.length
+            prcCount: prcs.length,
+            ehicCount: ehics.length
         });
 
         res.render('prc/history', {
             title: title,
             user: req.user,
-            prcs: prcs
+            prcs: prcs,
+            ehics: ehics
         });
 
     } catch (error) {
-        logger.error('Error fetching PRC history', { error: error.message, stack: error.stack });
+        logger.error('Error fetching document history', { error: error.message, stack: error.stack });
         res.status(500).render('errorPage', {
             title: 'Error',
-            error: 'Failed to load PRC history',
+            error: 'Failed to load document history',
             user: req.user
         });
     }
@@ -1208,7 +1269,6 @@ router.get('/:id', isAuthenticated, async (req, res) => {
             hasAccess = true;
         } else if (req.user.role === 'citizen' || req.user.role === 'user') {
             // Check if PRC is linked through an approved request
-            const PRCRequest = require('../models/PRCRequest');
             const request = await PRCRequest.findOne({
                 citizenId: req.user._id,
                 prcId: prc._id,
@@ -1278,7 +1338,6 @@ router.get('/:id/download', isAuthenticated, async (req, res) => {
             hasAccess = true;
         } else if (req.user.role === 'citizen' || req.user.role === 'user') {
             // Check if PRC is linked through an approved request
-            const PRCRequest = require('../models/PRCRequest');
             const request = await PRCRequest.findOne({
                 citizenId: req.user._id,
                 prcId: prc._id,
@@ -1351,7 +1410,6 @@ router.post('/:id/send-email', isAuthenticated, [
         } else if (prc.citizenId && prc.citizenId.toString() === req.user._id.toString()) {
             hasAccess = true;
         } else if (req.user.role === 'citizen' || req.user.role === 'user') {
-            const PRCRequest = require('../models/PRCRequest');
             const request = await PRCRequest.findOne({
                 citizenId: req.user._id,
                 prcId: prc._id,
@@ -1439,7 +1497,6 @@ router.post('/:id/send-email', isAuthenticated, [
 // Approve PRC Request
 router.post('/requests/:id/approve', isAuthenticated, async (req, res) => {
     try {
-        const PRCRequest = require('../models/PRCRequest');
         const prcRequest = await PRCRequest.findById(req.params.id)
             .populate('citizenId', 'firstName lastName email')
             .populate('ehicId')
@@ -1628,7 +1685,6 @@ router.post('/requests/:id/approve', isAuthenticated, async (req, res) => {
 // Reject PRC Request
 router.post('/requests/:id/reject', isAuthenticated, async (req, res) => {
     try {
-        const PRCRequest = require('../models/PRCRequest');
         const { notes } = req.body;
 
         if (!notes || notes.length < 10) {

@@ -571,6 +571,10 @@ router.post('/profile', [
         .optional({ checkFalsy: true })
         .matches(/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/)
         .withMessage('Date of birth must be in format YYYY-MM-DD'),
+    body('dateOfEstablishment')
+        .optional({ checkFalsy: true })
+        .matches(/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/)
+        .withMessage('Date of establishment must be in format YYYY-MM-DD'),
     body('countryOfResidence')
         .optional({ checkFalsy: true })
         .isIn(['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK'])
@@ -600,7 +604,7 @@ router.post('/profile', [
             });
         }
 
-        const { firstName, lastName, dateOfBirth, countryOfResidence, organization } = req.body;
+        const { firstName, lastName, dateOfBirth, dateOfEstablishment, countryOfResidence, organization } = req.body;
         logger.debug('Updating user profile', { userId: req.session.userId, firstName, lastName });
 
         const user = await User.findById(req.session.userId);
@@ -612,13 +616,35 @@ router.post('/profile', [
         // Update fields
         user.firstName = firstName;
         user.lastName = lastName;
-        user.dateOfBirth = dateOfBirth || '';
-        user.countryOfResidence = countryOfResidence || '';
         user.organization = organization || '';
         user.updatedAt = Date.now();
 
-        // Check if profile is complete (for non-issuer users)
-        if (user.role !== 'issuer') {
+        // Update role-specific fields
+        if (user.role === 'issuer') {
+            // For issuers: use dateOfEstablishment instead of dateOfBirth
+            // countryOfResidence is not relevant for issuers (they have country from institution)
+
+            // Check if institution setup is completed first (required before profile can be completed)
+            if (!user.institutionSetupCompleted) {
+                logger.warn('Issuer profile update attempted before institution setup', {
+                    userId: user._id,
+                    email: user.email
+                });
+                return res.render('auth/profile', {
+                    title: 'Profile',
+                    error: 'Please complete institution setup first (Step 1 of onboarding). You need to create or join an institution before completing your profile.',
+                    user: user
+                });
+            }
+
+            user.dateOfEstablishment = dateOfEstablishment || '';
+            // Check if issuer profile is complete (institution setup must already be done)
+            user.profileCompleted = !!(user.firstName && user.lastName && user.dateOfEstablishment && user.institutionSetupCompleted);
+        } else {
+            // For citizens: use dateOfBirth and countryOfResidence
+            user.dateOfBirth = dateOfBirth || '';
+            user.countryOfResidence = countryOfResidence || '';
+            // Check if citizen profile is complete
             user.profileCompleted = !!(user.firstName && user.lastName && user.dateOfBirth && user.countryOfResidence);
         }
 
@@ -634,8 +660,10 @@ router.post('/profile', [
         req.session.success = 'Profile updated successfully';
         logExit('POST /auth/profile', { success: true }, logger);
 
-        // Redirect to dashboard for citizens/users to continue onboarding flow
+        // Redirect to dashboard to continue onboarding flow
         if (user.role === 'citizen' || user.role === 'user') {
+            return res.redirect('/prc/dashboard');
+        } else if (user.role === 'issuer') {
             return res.redirect('/prc/dashboard');
         }
 
@@ -756,6 +784,66 @@ router.post('/change-password', [
             error: 'An error occurred while changing your password. Please try again.',
             user: user
         });
+    }
+});
+
+// POST - Leave institution (issuer only)
+router.post('/leave-institution', async (req, res) => {
+    logEntry('POST /auth/leave-institution', { userId: req.session.userId }, logger);
+
+    try {
+        // Check if user is logged in
+        if (!req.session || !req.session.userId) {
+            logger.warn('Unauthorized leave institution attempt');
+            return res.redirect('/auth/login');
+        }
+
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            logger.warn('User not found', { userId: req.session.userId });
+            return res.redirect('/auth/login');
+        }
+
+        // Only issuers can leave institutions
+        if (user.role !== 'issuer') {
+            req.session.error = 'Only issuers can leave institutions';
+            return res.redirect('/auth/profile');
+        }
+
+        // Check if user is actually connected to an institution
+        if (!user.institutionSetupCompleted || !user.institutionId) {
+            req.session.error = 'You are not connected to any institution';
+            return res.redirect('/auth/profile');
+        }
+        const previousInstitution = `${user.organization} (${user.country}:${user.institutionId})`;
+
+        // Reset institution-related fields
+        user.country = undefined;
+        user.institutionId = undefined;
+        user.organization = undefined;
+        user.institutionSetupCompleted = false;
+        user.profileCompleted = false;
+        user.certificateCreated = false;
+
+        await user.save();
+
+        logger.info('User left institution', {
+            userId: user._id,
+            email: user.email,
+            previousInstitution
+        });
+
+        req.session.success = `You have successfully left ${previousInstitution}. You can now create or join another institution.`;
+        res.redirect('/prc/dashboard');
+
+    } catch (error) {
+        logger.error('Leave institution error', {
+            error: error.message,
+            stack: error.stack,
+            userId: req.session.userId
+        });
+        req.session.error = 'An error occurred while leaving the institution. Please try again.';
+        res.redirect('/auth/profile');
     }
 });
 

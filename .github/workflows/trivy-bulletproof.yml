@@ -41,8 +41,21 @@ jobs:
           echo "Reports directory created"
           ls -la
 
+      # ✅ FIX: Cache Trivy database to avoid repeated downloads
+      - name: Cache Trivy DB
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/trivy
+          key: ${{ runner.os }}-trivy-db-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-trivy-db-
+
+      # ✅ FIX: Run Trivy scan (SARIF) with timeout and authentication
       - name: Run Trivy scan (SARIF)
         uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -51,9 +64,14 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
           scanners: 'vuln,secret,misconfig'
           exit-code: '0'
+          timeout: 10m0s
 
+      # ✅ FIX: Run Trivy scan (Table) - reuses cached DB
       - name: Run Trivy scan (Table)
         uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -62,9 +80,14 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
           scanners: 'vuln,secret,misconfig'
           exit-code: '0'
+          timeout: 10m0s
 
+      # ✅ FIX: Run Trivy scan (JSON) - reuses cached DB
       - name: Run Trivy scan (JSON)
         uses: aquasecurity/trivy-action@master
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -73,6 +96,7 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM,LOW'
           scanners: 'vuln,secret,misconfig'
           exit-code: '0'
+          timeout: 10m0s
 
       - name: Check generated files
         run: |

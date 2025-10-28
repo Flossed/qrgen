@@ -2,6 +2,9 @@
 <div class="row">
     <div class="col-12">
         <!-- Page Header -->
+        <%
+            const totalDocuments = prcs.length + ehics.length;
+        %>
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div class="d-flex align-items-center">
                 <a href="/prc/dashboard" class="btn btn-outline-secondary me-3">
@@ -13,7 +16,10 @@
                         <%= title %>
                     </h3>
                     <small class="text-muted">
-                        <%= prcs.length %> <%= prcs.length === 1 ? 'document' : 'documents' %>
+                        <%= totalDocuments %> <%= totalDocuments === 1 ? 'document' : 'documents' %>
+                        <% if (prcs.length > 0 && ehics.length > 0) { %>
+                            (<%= prcs.length %> PRC<%= prcs.length !== 1 ? 's' : '' %>, <%= ehics.length %> EHIC<%= ehics.length !== 1 ? 's' : '' %>)
+                        <% } %>
                     </small>
                 </div>
             </div>
@@ -24,9 +30,108 @@
             <% } %>
         </div>
 
-        <!-- PRC List -->
-        <% if (prcs.length > 0) { %>
+        <!-- Document List (PRCs and EHICs) -->
+        <% if (prcs.length > 0 || ehics.length > 0) { %>
             <div class="row">
+                <!-- Display EHICs first -->
+                <% ehics.forEach(ehic => { %>
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 <%= ehic.status === 'revoked' ? 'border-danger' : ehic.isActive ? 'border-primary' : 'border-warning' %>">
+                            <div class="card-header <%= ehic.status === 'revoked' ? 'bg-danger text-white' : ehic.isActive ? 'bg-primary text-white' : 'bg-warning text-dark' %>">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="bi bi-credit-card me-1"></i>
+                                        <strong><%= ehic.givenName %> <%= ehic.familyName %></strong>
+                                    </div>
+                                    <span class="badge bg-light text-dark">
+                                        EHIC
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row small mb-2">
+                                    <dt class="col-5">Card ID:</dt>
+                                    <dd class="col-7"><code class="small"><%= ehic.cardId || 'N/A' %></code></dd>
+
+                                    <dt class="col-5">Personal ID:</dt>
+                                    <dd class="col-7"><%= ehic.personalIdNumber %></dd>
+
+                                    <dt class="col-5">Country:</dt>
+                                    <dd class="col-7"><%= ehic.cardIssuerCountry %></dd>
+
+                                    <dt class="col-5">Institution:</dt>
+                                    <dd class="col-7">
+                                        <% if (ehic.institution) { %>
+                                            <%= ehic.institution.name || ehic.institutionId %>
+                                        <% } else { %>
+                                            <%= ehic.institutionId %>
+                                        <% } %>
+                                    </dd>
+
+                                    <dt class="col-5">Date of Birth:</dt>
+                                    <dd class="col-7"><%= new Date(ehic.dateOfBirth).toLocaleDateString() %></dd>
+
+                                    <dt class="col-5">Expiry Date:</dt>
+                                    <dd class="col-7"><%= new Date(ehic.expiryDate).toLocaleDateString() %></dd>
+
+                                    <dt class="col-5">Issued:</dt>
+                                    <dd class="col-7"><%= new Date(ehic.issuanceDate).toLocaleDateString() %></dd>
+
+                                    <% if (user.role === 'citizen' || user.role === 'user') { %>
+                                        <% if (ehic.reviewedBy) { %>
+                                            <dt class="col-5">Approved by:</dt>
+                                            <dd class="col-7">
+                                                <%= ehic.reviewedBy.firstName %> <%= ehic.reviewedBy.lastName %>
+                                            </dd>
+                                        <% } %>
+                                    <% } else { %>
+                                        <% if (ehic.citizenId) { %>
+                                            <dt class="col-5">Holder:</dt>
+                                            <dd class="col-7">
+                                                <%= ehic.citizenId.firstName %> <%= ehic.citizenId.lastName %>
+                                            </dd>
+                                        <% } %>
+                                    <% } %>
+
+                                    <dt class="col-5">Status:</dt>
+                                    <dd class="col-7">
+                                        <% if (ehic.status === 'revoked') { %>
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Revoked
+                                            </span>
+                                        <% } else if (ehic.isActive) { %>
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Active
+                                            </span>
+                                        <% } else if (ehic.isExpired) { %>
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>Expired
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-clock me-1"></i><%= ehic.status %>
+                                            </span>
+                                        <% } %>
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="d-flex gap-2">
+                                    <a href="/ehic/my-ehic" class="btn btn-outline-primary btn-sm flex-fill">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </a>
+                                    <% if (ehic.pdfPath) { %>
+                                        <a href="/ehic/download/<%= ehic._id %>" class="btn btn-outline-success btn-sm flex-fill" target="_blank">
+                                            <i class="bi bi-download me-1"></i>PDF
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+
+                <!-- Display PRCs -->
                 <% prcs.forEach(prc => { %>
                     <div class="col-md-6 col-lg-4 mb-4">
                         <div class="card h-100 <%= prc.isRevoked ? 'border-danger' : prc.isValid ? 'border-success' : 'border-warning' %>">
@@ -37,7 +142,7 @@
                                         <strong><%= prc.prcData.gn %> <%= prc.prcData.fn %></strong>
                                     </div>
                                     <span class="badge bg-<%= prc.isRevoked ? 'dark' : prc.isValid ? 'light' : 'secondary' %> text-<%= prc.isRevoked || prc.isValid ? 'dark' : 'white' %>">
-                                        <%= prc.prcData.ic %>
+                                        PRC
                                     </span>
                                 </div>
                             </div>
@@ -45,6 +150,9 @@
                                 <dl class="row small mb-2">
                                     <dt class="col-5">Personal ID:</dt>
                                     <dd class="col-7"><code class="small"><%= prc.prcData.hi %></code></dd>
+
+                                    <dt class="col-5">Country:</dt>
+                                    <dd class="col-7"><%= prc.prcData.ic %></dd>
 
                                     <dt class="col-5">Institution:</dt>
                                     <dd class="col-7"><%= prc.prcData.in %> (<%= prc.prcData.ii %>)</dd>
@@ -128,16 +236,21 @@
                     <h4 class="mt-3 text-muted">No documents found</h4>
                     <% if (user.role === 'citizen' || user.role === 'user') { %>
                         <p class="text-muted">
-                            You haven't received any PRC documents yet.<br>
-                            Request a PRC from your dashboard when you need one for travel.
+                            You haven't received any documents yet.<br>
+                            Request an EHIC or PRC from your dashboard when you need one.
                         </p>
-                        <a href="/prc/create" class="btn btn-primary mt-3">
-                            <i class="bi bi-plus-circle me-2"></i>Request PRC
-                        </a>
+                        <div class="d-flex gap-2 justify-content-center mt-3">
+                            <a href="/ehic/request" class="btn btn-primary">
+                                <i class="bi bi-credit-card me-2"></i>Request EHIC
+                            </a>
+                            <a href="/prc/create" class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-text me-2"></i>Request PRC
+                            </a>
+                        </div>
                     <% } else { %>
                         <p class="text-muted">
-                            You haven't generated any PRC documents yet.<br>
-                            Start by creating your first PRC.
+                            You haven't generated any documents yet.<br>
+                            Start by creating your first PRC or approving EHIC requests.
                         </p>
                         <a href="/prc/create" class="btn btn-primary mt-3">
                             <i class="bi bi-plus-circle me-2"></i>Generate New PRC
@@ -148,7 +261,20 @@
         <% } %>
 
         <!-- Statistics Summary (if there are documents) -->
-        <% if (prcs.length > 0) { %>
+        <% if (prcs.length > 0 || ehics.length > 0) { %>
+            <%
+                const validPRCs = prcs.filter(p => p.isValid).length;
+                const expiredPRCs = prcs.filter(p => p.isExpired).length;
+                const revokedPRCs = prcs.filter(p => p.isRevoked).length;
+
+                const activeEHICs = ehics.filter(e => e.isActive).length;
+                const expiredEHICs = ehics.filter(e => e.isExpired).length;
+                const revokedEHICs = ehics.filter(e => e.status === 'revoked').length;
+
+                const totalValid = validPRCs + activeEHICs;
+                const totalExpired = expiredPRCs + expiredEHICs;
+                const totalRevoked = revokedPRCs + revokedEHICs;
+            %>
             <div class="card mt-4">
                 <div class="card-header bg-light">
                     <i class="bi bi-bar-chart me-2"></i>
@@ -157,20 +283,42 @@
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-3">
-                            <h4 class="text-primary"><%= prcs.length %></h4>
+                            <h4 class="text-primary"><%= totalDocuments %></h4>
                             <p class="text-muted mb-0 small">Total Documents</p>
+                            <small class="text-muted">
+                                <%= prcs.length %> PRC<%= prcs.length !== 1 ? 's' : '' %>,
+                                <%= ehics.length %> EHIC<%= ehics.length !== 1 ? 's' : '' %>
+                            </small>
                         </div>
                         <div class="col-md-3">
-                            <h4 class="text-success"><%= prcs.filter(p => p.isValid).length %></h4>
-                            <p class="text-muted mb-0 small">Currently Valid</p>
+                            <h4 class="text-success"><%= totalValid %></h4>
+                            <p class="text-muted mb-0 small">Active/Valid</p>
+                            <% if (prcs.length > 0 && ehics.length > 0) { %>
+                                <small class="text-muted">
+                                    <%= validPRCs %> PRC<%= validPRCs !== 1 ? 's' : '' %>,
+                                    <%= activeEHICs %> EHIC<%= activeEHICs !== 1 ? 's' : '' %>
+                                </small>
+                            <% } %>
                         </div>
                         <div class="col-md-3">
-                            <h4 class="text-warning"><%= prcs.filter(p => p.isExpired).length %></h4>
+                            <h4 class="text-warning"><%= totalExpired %></h4>
                             <p class="text-muted mb-0 small">Expired</p>
+                            <% if (prcs.length > 0 && ehics.length > 0) { %>
+                                <small class="text-muted">
+                                    <%= expiredPRCs %> PRC<%= expiredPRCs !== 1 ? 's' : '' %>,
+                                    <%= expiredEHICs %> EHIC<%= expiredEHICs !== 1 ? 's' : '' %>
+                                </small>
+                            <% } %>
                         </div>
                         <div class="col-md-3">
-                            <h4 class="text-danger"><%= prcs.filter(p => p.isRevoked).length %></h4>
+                            <h4 class="text-danger"><%= totalRevoked %></h4>
                             <p class="text-muted mb-0 small">Revoked</p>
+                            <% if (prcs.length > 0 && ehics.length > 0) { %>
+                                <small class="text-muted">
+                                    <%= revokedPRCs %> PRC<%= revokedPRCs !== 1 ? 's' : '' %>,
+                                    <%= revokedEHICs %> EHIC<%= revokedEHICs !== 1 ? 's' : '' %>
+                                </small>
+                            <% } %>
                         </div>
                     </div>
                 </div>

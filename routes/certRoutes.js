@@ -276,6 +276,16 @@ ${Buffer.from(JSON.stringify(certData)).toString('base64')}
             name: certificate.name
         });
 
+        // Update user's certificateCreated flag for issuer onboarding
+        if (req.user.role === 'issuer' && !req.user.certificateCreated) {
+            const User = require('../models/User');
+            await User.findByIdAndUpdate(req.user._id, { certificateCreated: true });
+            logger.info('Updated issuer certificateCreated flag', {
+                userId: req.user._id,
+                certificateId: certificate._id
+            });
+        }
+
         console.log('✅ Certificate created successfully:', {
             id: certificate._id,
             name: certificate.name,

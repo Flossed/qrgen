@@ -272,46 +272,6 @@
                                     </ul>
                                 </li>
                             <% } %>
-                            <% if (user.role === 'issuer') { %>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/prc/generate">
-                                        <i class="bi bi-qr-code me-1"></i>
-                                        Generate PRC
-                                    </a>
-                                </li>
-                            <% } %>
-                            <% if (user.role === 'issuer') { %>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/certificates">
-                                        <i class="bi bi-key me-1"></i>
-                                        Certificates
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/ehic/pending">
-                                        <i class="bi bi-credit-card-2-front me-1"></i>
-                                        Pending EHICs
-                                    </a>
-                                </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="institutionsDropdown" role="button" data-bs-toggle="dropdown">
-                                        <i class="bi bi-hospital me-1"></i>
-                                        Institutions
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="/institution-request/choose">
-                                            <i class="bi bi-plus-circle me-2"></i>Join/Create Institution
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="/institution-request/my-requests">
-                                            <i class="bi bi-file-text me-2"></i>My Requests
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="/institution-request/pending-joins">
-                                            <i class="bi bi-clock-history me-2"></i>Pending Join Requests
-                                        </a></li>
-                                    </ul>
-                                </li>
-                            <% } %>
                         <% } %>
                     <% } %>
                 </ul>

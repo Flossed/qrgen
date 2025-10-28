@@ -66,6 +66,12 @@ router.get('/choose', isAuthenticated, isIssuer, async (req, res) => {
 // GET - Join existing institution page
 router.get('/join', isAuthenticated, isIssuer, async (req, res) => {
     try {
+        // Check if issuer is already connected to an institution
+        if (req.user.institutionSetupCompleted && req.user.institutionId) {
+            req.session.error = 'You are already connected to an institution. Please leave your current institution before joining another one.';
+            return res.redirect('/prc/dashboard');
+        }
+
         // Get all active institutions
         const institutions = await HealthcareInstitution.find({ isActive: true })
             .sort({ country: 1, name: 1 });
@@ -107,6 +113,12 @@ router.post('/join', [
             return res.redirect('/institution-request/join');
         }
 
+        // Check if issuer is already connected to an institution
+        if (req.user.institutionSetupCompleted && req.user.institutionId) {
+            req.session.error = 'You are already connected to an institution. Please leave your current institution before joining another one.';
+            return res.redirect('/prc/dashboard');
+        }
+
         // Check if institution exists
         const institution = await HealthcareInstitution.findById(req.body.institutionId);
         if (!institution || !institution.isActive) {
@@ -123,7 +135,7 @@ router.post('/join', [
 
         if (existingRequest) {
             req.session.error = 'You already have a pending request for this institution';
-            return res.redirect('/institution-request/choose');
+            return res.redirect('/prc/dashboard');
         }
 
         // Create join request
@@ -145,7 +157,7 @@ router.post('/join', [
         // TODO: Send email notification to institution administrators
 
         req.session.success = `Join request sent to ${institution.name}. An institution administrator will review your request.`;
-        res.redirect('/institution-request/choose');
+        res.redirect('/prc/dashboard');
 
     } catch (error) {
         logger.error('Join request error', { error: error.message, stack: error.stack });
@@ -156,6 +168,12 @@ router.post('/join', [
 
 // GET - Create new institution page
 router.get('/create', isAuthenticated, isIssuer, (req, res) => {
+    // Check if issuer is already connected to an institution
+    if (req.user.institutionSetupCompleted && req.user.institutionId) {
+        req.session.error = 'You are already connected to an institution. Please leave your current institution before creating another one.';
+        return res.redirect('/prc/dashboard');
+    }
+
     res.render('institution/create', {
         title: 'Create New Institution',
         user: req.user,
@@ -197,6 +215,12 @@ router.post('/create', [
             return res.redirect('/institution-request/create');
         }
 
+        // Check if issuer is already connected to an institution
+        if (req.user.institutionSetupCompleted && req.user.institutionId) {
+            req.session.error = 'You are already connected to an institution. Please leave your current institution before creating another one.';
+            return res.redirect('/prc/dashboard');
+        }
+
         // Check if user already has a pending creation request
         const existingRequest = await InstitutionRequest.findOne({
             requestedBy: req.user._id,
@@ -206,7 +230,7 @@ router.post('/create', [
 
         if (existingRequest) {
             req.session.error = 'You already have a pending institution creation request';
-            return res.redirect('/institution-request/choose');
+            return res.redirect('/prc/dashboard');
         }
 
         // Create request
@@ -231,7 +255,7 @@ router.post('/create', [
         // TODO: Send email notification to system administrators
 
         req.session.success = 'Institution creation request submitted. A system administrator will review your request.';
-        res.redirect('/institution-request/choose');
+        res.redirect('/prc/dashboard');
 
     } catch (error) {
         logger.error('Create institution request error', { error: error.message, stack: error.stack });
@@ -336,6 +360,10 @@ router.post('/approve-join/:requestId', isAuthenticated, isIssuer, async (req, r
         user.country = request.institutionId.country;
         user.institutionId = request.institutionId.institutionId;
         user.organization = request.institutionId.name;
+        // Mark institution setup as completed for issuer onboarding
+        if (user.role === 'issuer') {
+            user.institutionSetupCompleted = true;
+        }
         await user.save();
 
         logger.debug('Join request approved', {
@@ -523,6 +551,10 @@ router.post('/approve-creation/:requestId', [
         user.country = institution.country;
         user.institutionId = institution.institutionId;
         user.organization = institution.name;
+        // Mark institution setup as completed for issuer onboarding
+        if (user.role === 'issuer') {
+            user.institutionSetupCompleted = true;
+        }
         await user.save();
 
         logger.debug('Institution creation request approved', {

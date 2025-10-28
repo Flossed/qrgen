@@ -2,6 +2,9 @@
     <!-- Onboarding Section (for non-issuer users who haven't completed onboarding) -->
     <%- include('prc/partials/onboarding-section') %>
 
+    <!-- Issuer Onboarding Section (for issuers who haven't completed onboarding) -->
+    <%- include('prc/partials/issuer-onboarding-section') %>
+
     <!-- Welcome Section -->
     <div class="col-12">
         <div class="card mb-4">
@@ -25,16 +28,11 @@
                             <% if (user.role === 'admin') { %>
                                 Manage the PRC generation system, users, and certificates.
                             <% } else if (user.role === 'issuer') { %>
-                                Generate eEHIC compliant Provisional Replacement Certificates for <%= user.institutionName || 'your institution' %>.
+                                Review and approve PRC requests from citizens. PRCs are automatically generated upon approval.
                             <% } else { %>
                                 View and manage your PRC documents and profile information.
                             <% } %>
                         </p>
-                        <% if (user.role === 'issuer' || user.role === 'admin') { %>
-                            <a href="/prc/generate" class="btn btn-primary">
-                                <i class="bi bi-qr-code me-2"></i>Generate New PRC
-                            </a>
-                        <% } %>
                     </div>
                     <div class="col-md-4 text-center">
                         <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center"
@@ -44,6 +42,49 @@
                         </div>
                     </div>
                 </div>
+
+                <% if (user.role === 'issuer' && issuerMetrics) { %>
+                <!-- Issuer Metrics -->
+                <hr class="my-3">
+                <div class="row g-3 text-center">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-warning bg-opacity-10 rounded">
+                            <div class="display-6 text-warning mb-2">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <h3 class="mb-0"><%= issuerMetrics.totalPendingRequests %></h3>
+                            <small class="text-muted">Pending Requests</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-info bg-opacity-10 rounded">
+                            <div class="display-6 text-info mb-2">
+                                <i class="bi bi-people"></i>
+                            </div>
+                            <h3 class="mb-0"><%= issuerMetrics.registeredUsers %></h3>
+                            <small class="text-muted">Registered Users</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-success bg-opacity-10 rounded">
+                            <div class="display-6 text-success mb-2">
+                                <i class="bi bi-credit-card-2-front"></i>
+                            </div>
+                            <h3 class="mb-0"><%= issuerMetrics.issuedEHICs %></h3>
+                            <small class="text-muted">Issued EHICs</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-primary bg-opacity-10 rounded">
+                            <div class="display-6 text-primary mb-2">
+                                <i class="bi bi-qr-code"></i>
+                            </div>
+                            <h3 class="mb-0"><%= issuerMetrics.issuedPRCs %></h3>
+                            <small class="text-muted">Issued PRCs</small>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
             </div>
         </div>
     </div>
@@ -56,28 +97,13 @@
     </div>
 
     <% if (user.role === 'issuer' || user.role === 'admin') { %>
-        <!-- Generate PRC Card -->
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 certificate-card">
-                <div class="card-body text-center">
-                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
-                         style="width: 60px; height: 60px;">
-                        <i class="bi bi-qr-code text-primary" style="font-size: 1.5rem;"></i>
-                    </div>
-                    <h6 class="card-title">Generate PRC</h6>
-                    <p class="card-text text-muted small mb-3">
-                        Create a new Provisional Replacement Certificate with secure QR code
-                    </p>
-                    <a href="/prc/generate" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-circle me-1"></i>Start Generation
-                    </a>
-                </div>
-            </div>
-        </div>
-
         <!-- Manage Certificates -->
         <div class="col-md-4 mb-3">
-            <div class="card h-100 certificate-card">
+            <%
+                // Check if issuer has completed onboarding
+                const issuerOnboardingComplete = user.role !== 'issuer' || (user.institutionSetupCompleted && user.profileCompleted && user.certificateCreated);
+            %>
+            <div class="card h-100 certificate-card <%= !issuerOnboardingComplete ? 'opacity-50' : '' %>">
                 <div class="card-body text-center">
                     <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                          style="width: 60px; height: 60px;">
@@ -87,9 +113,15 @@
                     <p class="card-text text-muted small mb-3">
                         Manage RSA certificates for JWT signing and verification
                     </p>
-                    <a href="/certificates" class="btn btn-success btn-sm">
-                        <i class="bi bi-key me-1"></i>Manage Keys
-                    </a>
+                    <% if (issuerOnboardingComplete) { %>
+                        <a href="/certificates" class="btn btn-success btn-sm">
+                            <i class="bi bi-key me-1"></i>Manage Keys
+                        </a>
+                    <% } else { %>
+                        <button class="btn btn-secondary btn-sm" disabled>
+                            <i class="bi bi-lock me-1"></i>Complete Onboarding First
+                        </button>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -97,7 +129,11 @@
 
     <!-- View History -->
     <div class="col-md-4 mb-3">
-        <div class="card h-100 certificate-card">
+        <%
+            // Check if issuer has completed onboarding (only applies to issuers)
+            const historyAccessAllowed = user.role !== 'issuer' || (user.institutionSetupCompleted && user.profileCompleted && user.certificateCreated);
+        %>
+        <div class="card h-100 certificate-card <%= !historyAccessAllowed ? 'opacity-50' : '' %>">
             <div class="card-body text-center">
                 <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                      style="width: 60px; height: 60px;">
@@ -117,9 +153,15 @@
                         View your PRC documents and history
                     <% } %>
                 </p>
-                <a href="/prc/history" class="btn btn-info btn-sm">
-                    <i class="bi bi-list me-1"></i>View History
-                </a>
+                <% if (historyAccessAllowed) { %>
+                    <a href="/prc/history" class="btn btn-info btn-sm">
+                        <i class="bi bi-list me-1"></i>View History
+                    </a>
+                <% } else { %>
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        <i class="bi bi-lock me-1"></i>Complete Onboarding First
+                    </button>
+                <% } %>
             </div>
         </div>
     </div>
@@ -163,13 +205,13 @@
         </div>
     <% } %>
 
-    <!-- Pending EHIC Requests (Issuer Only) -->
+    <!-- Pending Requests (Issuer Only) -->
     <% if (user.role === 'issuer' && typeof pendingEHICRequests !== 'undefined') { %>
         <div class="col-12 mt-4">
             <div class="card">
                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
-                        <i class="bi bi-clock-history me-2"></i>Pending EHIC Requests
+                        <i class="bi bi-clock-history me-2"></i>Pending Requests
                     </h5>
                     <% if (pendingEHICRequests.length > 0) { %>
                         <span class="badge bg-danger"><%= pendingEHICRequests.length %></span>
@@ -469,6 +511,11 @@
                                     </div>
                                 </div>
                                 <div class="text-center mt-3">
+                                    <% if (activeEHIC.pdfPath) { %>
+                                        <a href="/ehic/download/<%= activeEHIC._id %>" class="btn btn-success btn-sm" target="_blank">
+                                            <i class="bi bi-download me-2"></i>Download EHIC Document
+                                        </a>
+                                    <% } %>
                                     <a href="/prc/create" class="btn btn-primary btn-sm">
                                         <i class="bi bi-file-earmark-plus me-2"></i>Request a PRC
                                     </a>
@@ -642,54 +689,6 @@
         </div>
     </div>
 
-    <!-- User Info (Mobile-friendly) -->
-    <div class="col-12 mt-4">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-person-badge me-2"></i>
-                Account Information
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <dl class="row mb-0">
-                            <dt class="col-sm-4">Name:</dt>
-                            <dd class="col-sm-8"><%= user.fullName %></dd>
-                            <dt class="col-sm-4">Email:</dt>
-                            <dd class="col-sm-8"><%= user.email %></dd>
-                            <dt class="col-sm-4">Role:</dt>
-                            <dd class="col-sm-8">
-                                <span class="badge bg-<%= user.role === 'admin' ? 'danger' : user.role === 'issuer' ? 'success' : 'primary' %>">
-                                    <%= user.role.charAt(0).toUpperCase() + user.role.slice(1) %>
-                                </span>
-                            </dd>
-                        </dl>
-                    </div>
-                    <% if (user.role === 'issuer' && user.institutionName) { %>
-                        <div class="col-md-6">
-                            <dl class="row mb-0">
-                                <dt class="col-sm-5">Institution:</dt>
-                                <dd class="col-sm-7"><%= user.institutionName %></dd>
-                                <% if (user.institutionId) { %>
-                                    <dt class="col-sm-5">Institution ID:</dt>
-                                    <dd class="col-sm-7"><%= user.institutionId %></dd>
-                                <% } %>
-                                <% if (user.countryCode) { %>
-                                    <dt class="col-sm-5">Country:</dt>
-                                    <dd class="col-sm-7"><%= user.countryCode %></dd>
-                                <% } %>
-                            </dl>
-                        </div>
-                    <% } %>
-                </div>
-                <div class="mt-3">
-                    <a href="/auth/profile" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-pencil me-1"></i>Edit Profile
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <style>

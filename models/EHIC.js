@@ -146,6 +146,12 @@ const ehicSchema = new mongoose.Schema({
         type: String,
         enum: ['expired', 'revoked', 'institution_change', 'citizen_request'],
         trim: true
+    },
+
+    // PDF document path
+    pdfPath: {
+        type: String,
+        trim: true
     }
 }, {
     timestamps: true
