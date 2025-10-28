@@ -380,6 +380,7 @@ jobs:
             echo "No critical vulnerabilities detected." >> $GITHUB_STEP_SUMMARY
             echo "Application meets security requirements for healthcare data processing." >> $GITHUB_STEP_SUMMARY
           fi
+          
 
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📋 Detailed reports are available in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
