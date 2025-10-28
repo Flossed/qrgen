@@ -362,6 +362,25 @@ router.post('/approve/:id', isAuthenticated, [
         // Approve EHIC
         await ehic.approve(req.user._id, req.body.notes);
 
+        // Generate EHIC PDF document
+        try {
+            const ehicPdfService = require('../services/ehicPdfService');
+            const pdfPath = await ehicPdfService.saveEHICPDF(ehic);
+            ehic.pdfPath = pdfPath;
+            await ehic.save();
+
+            logger.info('EHIC PDF generated', {
+                ehicId: ehic._id,
+                pdfPath: pdfPath
+            });
+        } catch (pdfError) {
+            logger.error('Failed to generate EHIC PDF', {
+                error: pdfError.message,
+                ehicId: ehic._id
+            });
+            // Don't fail the approval if PDF generation fails
+        }
+
         logger.info('EHIC request approved', {
             ehicId: ehic._id,
             citizenId: ehic.citizenId._id,
@@ -441,6 +460,61 @@ router.post('/reject/:id', isAuthenticated, [
     } catch (error) {
         logger.error('EHIC rejection error', { error: error.message, stack: error.stack });
         res.status(500).json({ error: 'An error occurred while rejecting the EHIC request' });
+    }
+});
+
+// GET - Download EHIC PDF
+router.get('/download/:id', isAuthenticated, async (req, res) => {
+    try {
+        logger.debug('EHIC PDF download requested', { ehicId: req.params.id, userId: req.user._id });
+
+        // Get EHIC
+        const ehic = await EHIC.findById(req.params.id);
+
+        if (!ehic) {
+            return res.status(404).send('EHIC not found');
+        }
+
+        // Check authorization - citizen can download their own EHIC, issuers can download from their institution
+        if (req.user.role === 'citizen' || req.user.role === 'user') {
+            if (ehic.citizenId.toString() !== req.user._id.toString()) {
+                return res.status(403).send('You can only download your own EHIC documents');
+            }
+        } else if (req.user.role === 'issuer') {
+            if (ehic.institutionId !== req.user.institutionId || ehic.cardIssuerCountry !== req.user.country) {
+                return res.status(403).send('You can only download EHICs from your institution');
+            }
+        }
+
+        // Check if PDF exists
+        if (!ehic.pdfPath || !require('fs').existsSync(ehic.pdfPath)) {
+            return res.status(404).send('EHIC PDF not found. Please contact support.');
+        }
+
+        // Send PDF file
+        const filename = `EHIC_${ehic.familyName}_${ehic.personalIdNumber}.pdf`;
+        res.download(ehic.pdfPath, filename, (err) => {
+            if (err) {
+                logger.error('EHIC PDF download error', {
+                    error: err.message,
+                    ehicId: ehic._id,
+                    userId: req.user._id
+                });
+                if (!res.headersSent) {
+                    res.status(500).send('Error downloading EHIC PDF');
+                }
+            } else {
+                logger.info('EHIC PDF downloaded', {
+                    ehicId: ehic._id,
+                    userId: req.user._id,
+                    filename: filename
+                });
+            }
+        });
+
+    } catch (error) {
+        logger.error('EHIC download error', { error: error.message, stack: error.stack });
+        res.status(500).send('An error occurred while downloading the EHIC');
     }
 });
 

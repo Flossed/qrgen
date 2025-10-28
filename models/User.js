@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'CH', 'UK']
     },
-    // Onboarding fields
+    // Onboarding fields (Citizens)
     personalIdNumber: {
         type: String,
         trim: true,
@@ -84,6 +84,20 @@ const userSchema = new mongoose.Schema({
         maxlength: 10,
         match: [/^\d+$/, 'Institution ID must contain only digits']
         // Not required during registration - populated through institution request workflow
+    },
+    // Issuer onboarding fields
+    institutionSetupCompleted: {
+        type: Boolean,
+        default: false
+    },
+    certificateCreated: {
+        type: Boolean,
+        default: false
+    },
+    dateOfEstablishment: {
+        type: String,
+        trim: true,
+        match: [/^[0-9]{4}-(0[0-9]|1[0-2]|00)-(0[0-9]|[1-2][0-9]|3[0-1]|00)$/, 'Date must be in format YYYY-MM-DD']
     },
     isActive: {
         type: Boolean,

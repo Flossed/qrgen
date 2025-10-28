@@ -54,6 +54,7 @@
                         </div>
                     </div>
 
+                    <% if (user.role !== 'issuer') { %>
                     <div class="form-floating mb-3">
                         <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth"
                                placeholder="Date of Birth"
@@ -61,6 +62,7 @@
                         <label for="dateOfBirth">Date of Birth</label>
                         <div class="form-text">Required for onboarding</div>
                     </div>
+                    <% } %>
 
                     <% if (user.role !== 'issuer') { %>
                     <div class="form-floating mb-3">
@@ -146,6 +148,14 @@
                         </h6>
 
                         <div class="form-floating mb-3">
+                            <input type="date" class="form-control" id="dateOfEstablishment" name="dateOfEstablishment"
+                                   placeholder="Date of Establishment"
+                                   value="<%= user.dateOfEstablishment || '' %>">
+                            <label for="dateOfEstablishment">Date of Establishment</label>
+                            <div class="form-text">Date when the institution was established - Required for onboarding</div>
+                        </div>
+
+                        <div class="form-floating mb-3">
                             <input type="text" class="form-control" id="organization" name="organization"
                                    placeholder="Organization"
                                    value="<%= user.organization || '' %>">
@@ -199,6 +209,20 @@
                             <label for="country">Country</label>
                             <div class="form-text">Country cannot be changed. Contact administrator if needed.</div>
                         </div>
+
+                        <% if (user.institutionSetupCompleted && user.institutionId) { %>
+                        <!-- Leave Institution Option -->
+                        <div class="alert alert-warning mt-3">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Leave Institution</h6>
+                            <p class="mb-2 small">
+                                You are currently connected to <strong><%= user.organization %></strong> (<%= user.country %>:<%= user.institutionId %>).
+                                Leaving will disconnect you from this institution and you will need to create or join another one to continue managing PRCs.
+                            </p>
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#leaveInstitutionModal">
+                                <i class="bi bi-box-arrow-right me-1"></i>Leave Institution
+                            </button>
+                        </div>
+                        <% } %>
                     <% } %>
 
                     <!-- Account Details -->
@@ -270,6 +294,44 @@
         </div>
     </div>
 </div>
+
+<!-- Leave Institution Modal -->
+<% if (user.role === 'issuer' && user.institutionSetupCompleted && user.institutionId) { %>
+<div class="modal fade" id="leaveInstitutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Leave Institution</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Warning: This action cannot be undone!</strong>
+                </div>
+                <p>You are about to leave <strong><%= user.organization %></strong>.</p>
+                <p><strong>Consequences of leaving:</strong></p>
+                <ul>
+                    <li>You will be disconnected from this institution</li>
+                    <li>Your profile completion status will be reset</li>
+                    <li>Your certificate will be deactivated</li>
+                    <li>You will not be able to manage PRCs until you join/create another institution</li>
+                    <li>You will need administrator approval to join/create another institution</li>
+                </ul>
+                <p class="text-muted">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="/auth/leave-institution" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-box-arrow-right me-1"></i>Yes, Leave Institution
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
 
 <script>
 // Password confirmation validation
