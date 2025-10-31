@@ -72,6 +72,11 @@ const canManageCertificates = (req, res, next) => {
 // Middleware to block admin users from PRC routes (Domain Owner should not generate PRCs)
 const blockAdminFromPRC = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
+        // Allow access to dashboard route so admins can be redirected to admin dashboard
+        if (req.path === '/dashboard') {
+            return next();
+        }
+
         logger.warn('Domain Owner attempted to access PRC route', {
             userId: req.user._id,
             route: req.originalUrl

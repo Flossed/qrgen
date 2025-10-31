@@ -157,6 +157,12 @@ appLogger.trace('Registering EHIC routes');
 const ehicRoutes = require('./routes/ehicRoutes');
 app.use('/ehic', ehicRoutes);
 
+// Resolver API routes (public - no auth required)
+// Follows EBSI format for issuer resolution
+appLogger.trace('Registering resolver API routes');
+const resolverRoutes = require('./routes/resolverRoutes');
+app.use('/api/v1', resolverRoutes);
+
 // Root redirect
 app.get('/', (req, res) => {
     if (req.session && req.session.userId) {
@@ -166,6 +172,43 @@ app.get('/', (req, res) => {
         }
     }
     res.redirect('/prc/dashboard');
+});
+
+// Approval success page (with spinner and auto-redirect)
+app.get('/approval-success', (req, res) => {
+    const { type, name } = req.query;
+
+    // Validate type parameter
+    if (!type || !['ehic', 'prc'].includes(type.toLowerCase())) {
+        return res.redirect('/prc/dashboard');
+    }
+
+    res.render('approval-success', {
+        title: 'Request Approved',
+        appTitle: 'PRC Generator',
+        requestType: type.toLowerCase(),
+        citizenName: name || null,
+        layout: false // No layout for this page
+    });
+});
+
+// Admin approval success page (with spinner and auto-redirect to admin dashboard)
+app.get('/admin-approval-success', (req, res) => {
+    const { type, name, id } = req.query;
+
+    // Validate type parameter
+    if (!type || type !== 'institution') {
+        return res.redirect('/admin/dashboard');
+    }
+
+    res.render('admin-approval-success', {
+        title: 'Institution Approved',
+        appTitle: 'PRC Generator',
+        requestType: type,
+        institutionName: name || null,
+        institutionId: id || null,
+        layout: false // No layout for this page
+    });
 });
 
 // Certificate management routes

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Approved - <%= appTitle || 'PRC Generator' %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .success-container {
+            max-width: 500px;
+            text-align: center;
+        }
+        .success-card {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .check-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #28a745;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            animation: scaleIn 0.5s ease-out;
+        }
+        .check-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .spinner-container {
+            margin: 2rem 0;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 0.3rem;
+        }
+        .countdown {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 1rem;
+        }
+        .redirect-text {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        .document-type {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-card">
+            <!-- Success Check Icon -->
+            <div class="check-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+
+            <!-- Document Type Badge -->
+            <div class="document-type">
+                <i class="bi bi-<%= requestType === 'ehic' ? 'credit-card' : 'file-earmark-text' %> me-1"></i>
+                <%= requestType === 'ehic' ? 'EHIC Request' : 'PRC Request' %>
+            </div>
+
+            <!-- Success Message -->
+            <h2 class="mb-3">Request Approved!</h2>
+
+            <% if (citizenName) { %>
+                <p class="text-muted mb-4">
+                    <%= requestType === 'ehic' ? 'EHIC' : 'PRC' %> for <strong><%= citizenName %></strong> has been approved successfully.
+                </p>
+            <% } else { %>
+                <p class="text-muted mb-4">
+                    The <%= requestType === 'ehic' ? 'EHIC' : 'PRC' %> request has been approved successfully.
+                </p>
+            <% } %>
+
+            <% if (requestType === 'ehic') { %>
+                <div class="alert alert-info py-2 small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    EHIC document has been generated and is now available to the citizen.
+                </div>
+            <% } else { %>
+                <div class="alert alert-info py-2 small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    PRC document has been generated and is now available to the citizen.
+                </div>
+            <% } %>
+
+            <!-- Spinner -->
+            <div class="spinner-container">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Countdown -->
+            <div class="countdown">
+                Redirecting in <span id="countdown">5</span> seconds...
+            </div>
+
+            <div class="redirect-text">
+                You will be redirected to your dashboard automatically.
+            </div>
+
+            <!-- Manual Redirect Button -->
+            <div class="mt-4">
+                <a href="/prc/dashboard" class="btn btn-primary">
+                    <i class="bi bi-arrow-left me-1"></i>Go to Dashboard Now
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer
+        let seconds = 5;
+        const countdownElement = document.getElementById('countdown');
+
+        const countdownInterval = setInterval(() => {
+            seconds--;
+            countdownElement.textContent = seconds;
+
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                window.location.href = '/prc/dashboard';
+            }
+        }, 1000);
+
+        // Preload dashboard in background for smoother transition
+        setTimeout(() => {
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = '/prc/dashboard';
+            document.head.appendChild(link);
+        }, 2000);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

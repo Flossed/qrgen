@@ -86,7 +86,7 @@
                                                 <h5 class="modal-title">Approve Institution Creation</h5>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
-                                            <form action="/institution-request/approve-creation/<%= request._id %>" method="POST">
+                                            <form id="approveForm-<%= request._id %>" data-request-id="<%= request._id %>">
                                                 <div class="modal-body">
                                                     <p>Approve the creation of <strong><%= request.institutionName %></strong> in <strong><%= request.institutionCountry %></strong>?</p>
                                                     <p class="text-muted small">
@@ -167,3 +167,55 @@
         </div>
     </div>
 </div>
+
+<% if (requests.length > 0) { %>
+<script>
+// Handle institution approval form submissions with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    const approveForms = document.querySelectorAll('form[id^="approveForm-"]');
+
+    approveForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const requestId = this.getAttribute('data-request-id');
+            const notes = document.getElementById(`approveNotes-${requestId}`).value;
+            const modal = bootstrap.Modal.getInstance(document.getElementById(`approveModal-${requestId}`));
+
+            // Disable submit button to prevent double submission
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+
+            fetch(`/institution-request/approve-creation/${requestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ notes: notes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    modal.hide();
+                    // Redirect to admin success page with 3-second timer
+                    window.location.href = `/admin-approval-success?type=institution&name=${encodeURIComponent(data.institutionName)}&id=${data.institutionId}`;
+                } else {
+                    // Re-enable button on error
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    alert(data.error || 'Failed to approve institution request');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                alert('An error occurred while approving the institution request');
+            });
+        });
+    });
+});
+</script>
+<% } %>

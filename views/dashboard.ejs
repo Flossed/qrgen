@@ -5,6 +5,40 @@
     <!-- Issuer Onboarding Section (for issuers who haven't completed onboarding) -->
     <%- include('prc/partials/issuer-onboarding-section') %>
 
+    <!-- Auto-Refresh Timer (only shown when there are pending institution requests) -->
+    <% if (user.role === 'issuer' && typeof pendingInstitutionRequest !== 'undefined' && pendingInstitutionRequest) { %>
+    <div class="col-12 mb-4">
+        <div class="card border-info">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <i class="bi bi-arrow-clockwise me-2 text-info"></i>
+                        <strong class="text-info">Auto-Refresh Active</strong>
+                        <span class="ms-2 text-muted small">Checking for approval updates every <span id="refreshInterval">30</span> seconds</span>
+                    </div>
+                    <button id="manualRefreshBtn" class="btn btn-sm btn-outline-info" onclick="refreshDashboard()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh Now
+                    </button>
+                </div>
+                <div class="progress" style="height: 6px; cursor: pointer;" onclick="refreshDashboard()" title="Click to refresh now">
+                    <div id="refreshProgressBar"
+                         class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                         role="progressbar"
+                         style="width: 100%;"
+                         aria-valuenow="100"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Next refresh in <strong id="countdown">30</strong> seconds. Click the bar or button to refresh immediately.
+                </small>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
     <!-- Welcome Section -->
     <div class="col-12">
         <div class="card mb-4">
@@ -728,8 +762,8 @@ function approveEHIC(ehicId) {
     .then(data => {
         if (data.success) {
             modal.hide();
-            showAlert('success', `EHIC request for ${data.citizenName} has been approved.`);
-            setTimeout(() => location.reload(), 1500);
+            // Redirect to success page with spinner
+            window.location.href = `/approval-success?type=ehic&name=${encodeURIComponent(data.citizenName)}`;
         } else {
             showAlert('danger', data.error || 'Failed to approve EHIC request');
         }
@@ -801,8 +835,9 @@ function approvePRCRequest(requestId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showAlert('success', 'PRC request has been approved and the PRC has been generated.');
-            setTimeout(() => location.reload(), 1500);
+            // Redirect to success page with spinner
+            const citizenName = data.citizenName || 'Citizen';
+            window.location.href = `/approval-success?type=prc&name=${encodeURIComponent(citizenName)}`;
         } else {
             showAlert('danger', data.error || 'Failed to approve PRC request');
         }
@@ -845,5 +880,131 @@ function rejectPRCRequest(requestId) {
         showAlert('danger', 'An error occurred while rejecting the PRC request');
     });
 }
+</script>
+<% } %>
+
+<!-- Auto-Refresh Script (only when there are pending institution requests) -->
+<% if (user.role === 'issuer' && typeof pendingInstitutionRequest !== 'undefined' && pendingInstitutionRequest) { %>
+<script>
+// Auto-refresh functionality for pending institution requests
+(function() {
+    const REFRESH_INTERVAL = 30; // seconds
+    let secondsRemaining = REFRESH_INTERVAL;
+    let refreshTimer = null;
+    let countdownTimer = null;
+
+    const progressBar = document.getElementById('refreshProgressBar');
+    const countdownElement = document.getElementById('countdown');
+    const manualRefreshBtn = document.getElementById('manualRefreshBtn');
+
+    // Function to refresh the dashboard
+    window.refreshDashboard = function() {
+        // Show loading state on button
+        const originalBtnContent = manualRefreshBtn.innerHTML;
+        manualRefreshBtn.disabled = true;
+        manualRefreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Refreshing...';
+
+        // Reload the page
+        location.reload();
+    };
+
+    // Function to update the countdown and progress bar
+    function updateCountdown() {
+        secondsRemaining--;
+
+        // Update countdown text
+        countdownElement.textContent = secondsRemaining;
+
+        // Update progress bar (animate from 100% to 0%)
+        const percentageRemaining = (secondsRemaining / REFRESH_INTERVAL) * 100;
+        progressBar.style.width = percentageRemaining + '%';
+        progressBar.setAttribute('aria-valuenow', percentageRemaining);
+
+        // Change color as it gets closer to refresh
+        if (secondsRemaining <= 5) {
+            progressBar.classList.remove('bg-info');
+            progressBar.classList.add('bg-warning');
+        } else if (secondsRemaining <= 10) {
+            progressBar.classList.remove('bg-info', 'bg-success');
+            progressBar.classList.add('bg-info');
+        }
+
+        // When countdown reaches 0, refresh the page
+        if (secondsRemaining <= 0) {
+            clearInterval(countdownTimer);
+            refreshDashboard();
+        }
+    }
+
+    // Function to start the countdown
+    function startCountdown() {
+        // Reset
+        secondsRemaining = REFRESH_INTERVAL;
+        countdownElement.textContent = secondsRemaining;
+        progressBar.style.width = '100%';
+        progressBar.setAttribute('aria-valuenow', 100);
+        progressBar.classList.remove('bg-warning', 'bg-success');
+        progressBar.classList.add('bg-info');
+
+        // Clear any existing timers
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+        }
+
+        // Start countdown (update every second)
+        countdownTimer = setInterval(updateCountdown, 1000);
+    }
+
+    // Initialize the countdown when page loads
+    startCountdown();
+
+    // Add visual feedback when hovering over the progress bar
+    const progressContainer = progressBar.parentElement;
+    progressContainer.addEventListener('mouseenter', function() {
+        this.style.opacity = '0.8';
+    });
+    progressContainer.addEventListener('mouseleave', function() {
+        this.style.opacity = '1';
+    });
+
+    // Clean up timers when page is about to unload
+    window.addEventListener('beforeunload', function() {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+        }
+        if (refreshTimer) {
+            clearTimeout(refreshTimer);
+        }
+    });
+
+    // Add console log for debugging
+    console.log('Auto-refresh initialized: Will refresh every', REFRESH_INTERVAL, 'seconds while institution request is pending');
+
+    // Show a small toast notification when auto-refresh is active
+    const toastHtml = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+            <div id="autoRefreshToast" class="toast align-items-center text-bg-info border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Auto-refresh is active. Dashboard will update automatically.
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add toast to DOM and show it briefly
+    document.body.insertAdjacentHTML('beforeend', toastHtml);
+    const toastElement = document.getElementById('autoRefreshToast');
+    const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
+    toast.show();
+
+    // Remove toast from DOM after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function() {
+        toastElement.parentElement.remove();
+    });
+})();
 </script>
 <% } %>

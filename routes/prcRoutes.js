@@ -26,6 +26,12 @@ router.use(blockAdminFromPRC);
 router.get('/dashboard', isAuthenticated, async (req, res) => {
     logEntry('GET /dashboard', { userId: req.user._id, username: req.user.username }, logger);
 
+    // Redirect admins to admin dashboard
+    if (req.user.role === 'admin') {
+        logger.debug('Redirecting admin to admin dashboard', { userId: req.user._id });
+        return res.redirect('/admin/dashboard');
+    }
+
     try {
         logger.debug('Fetching recent PRCs for user', { userId: req.user._id, role: req.user.role });
 
@@ -115,6 +121,23 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
                 totalEHICs: citizenEHICs.length,
                 hasActive: !!activeEHIC
             });
+        }
+
+        // Check for pending institution requests for issuers
+        let pendingInstitutionRequest = null;
+        if (req.user.role === 'issuer' && !req.user.institutionSetupCompleted) {
+            const InstitutionRequest = require('../models/InstitutionRequest');
+            pendingInstitutionRequest = await InstitutionRequest.findOne({
+                requestedBy: req.user._id,
+                status: 'pending'
+            }).populate('institutionId', 'name country');
+
+            if (pendingInstitutionRequest) {
+                logger.debug('Found pending institution request', {
+                    requestId: pendingInstitutionRequest._id,
+                    requestType: pendingInstitutionRequest.requestType
+                });
+            }
         }
 
         // Get pending EHIC requests and PRC requests for issuers
@@ -309,7 +332,8 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
             pendingPRCRequests: pendingPRCRequests,
             issuerInstitution: issuerInstitution,
             recentActivity: limitedActivity,
-            issuerMetrics: issuerMetrics
+            issuerMetrics: issuerMetrics,
+            pendingInstitutionRequest: pendingInstitutionRequest
         });
 
         logExit('GET /dashboard', null, logger);
@@ -1673,7 +1697,8 @@ router.post('/requests/:id/approve', isAuthenticated, async (req, res) => {
         return res.json({
             success: true,
             message: 'PRC request approved and PRC generated successfully',
-            prcId: prc._id
+            prcId: prc._id,
+            citizenName: `${prcRequest.citizenId.firstName} ${prcRequest.citizenId.lastName}`
         });
 
     } catch (error) {

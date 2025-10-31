@@ -72,6 +72,17 @@ router.get('/join', isAuthenticated, isIssuer, async (req, res) => {
             return res.redirect('/prc/dashboard');
         }
 
+        // Check if user already has a pending institution request (create or join)
+        const pendingRequest = await InstitutionRequest.findOne({
+            requestedBy: req.user._id,
+            status: 'pending'
+        });
+
+        if (pendingRequest) {
+            req.session.error = `You already have a pending ${pendingRequest.requestType === 'create' ? 'institution creation' : 'join'} request. Please wait for approval.`;
+            return res.redirect('/prc/dashboard');
+        }
+
         // Get all active institutions
         const institutions = await HealthcareInstitution.find({ isActive: true })
             .sort({ country: 1, name: 1 });
@@ -126,15 +137,14 @@ router.post('/join', [
             return res.redirect('/institution-request/join');
         }
 
-        // Check if user already has a pending request for this institution
+        // Check if user already has ANY pending institution request (create or join)
         const existingRequest = await InstitutionRequest.findOne({
             requestedBy: req.user._id,
-            institutionId: req.body.institutionId,
             status: 'pending'
         });
 
         if (existingRequest) {
-            req.session.error = 'You already have a pending request for this institution';
+            req.session.error = `You already have a pending ${existingRequest.requestType === 'create' ? 'institution creation' : 'join'} request. Please wait for approval.`;
             return res.redirect('/prc/dashboard');
         }
 
@@ -167,21 +177,42 @@ router.post('/join', [
 });
 
 // GET - Create new institution page
-router.get('/create', isAuthenticated, isIssuer, (req, res) => {
-    // Check if issuer is already connected to an institution
-    if (req.user.institutionSetupCompleted && req.user.institutionId) {
-        req.session.error = 'You are already connected to an institution. Please leave your current institution before creating another one.';
-        return res.redirect('/prc/dashboard');
-    }
+router.get('/create', isAuthenticated, isIssuer, async (req, res) => {
+    try {
+        // Check if issuer is already connected to an institution
+        if (req.user.institutionSetupCompleted && req.user.institutionId) {
+            req.session.error = 'You are already connected to an institution. Please leave your current institution before creating another one.';
+            return res.redirect('/prc/dashboard');
+        }
 
-    res.render('institution/create', {
-        title: 'Create New Institution',
-        user: req.user,
-        error: req.session.error,
-        success: req.session.success
-    });
-    delete req.session.error;
-    delete req.session.success;
+        // Check if user already has a pending institution request (create or join)
+        const pendingRequest = await InstitutionRequest.findOne({
+            requestedBy: req.user._id,
+            status: 'pending'
+        });
+
+        if (pendingRequest) {
+            req.session.error = `You already have a pending ${pendingRequest.requestType === 'create' ? 'institution creation' : 'join'} request. Please wait for approval.`;
+            return res.redirect('/prc/dashboard');
+        }
+
+        res.render('institution/create', {
+            title: 'Create New Institution',
+            user: req.user,
+            error: req.session.error,
+            success: req.session.success
+        });
+        delete req.session.error;
+        delete req.session.success;
+    } catch (error) {
+        logger.error('Create institution page error', { error: error.message, stack: error.stack });
+        res.status(500).render('errorPage', {
+            title: 'Internal Server Error',
+            error: 'Internal Server Error',
+            message: 'Could not load create institution page',
+            user: req.user
+        });
+    }
 });
 
 // POST - Submit create institution request
@@ -221,15 +252,14 @@ router.post('/create', [
             return res.redirect('/prc/dashboard');
         }
 
-        // Check if user already has a pending creation request
+        // Check if user already has ANY pending institution request (create or join)
         const existingRequest = await InstitutionRequest.findOne({
             requestedBy: req.user._id,
-            requestType: 'create',
             status: 'pending'
         });
 
         if (existingRequest) {
-            req.session.error = 'You already have a pending institution creation request';
+            req.session.error = `You already have a pending ${existingRequest.requestType === 'create' ? 'institution creation' : 'join'} request. Please wait for approval.`;
             return res.redirect('/prc/dashboard');
         }
 
@@ -566,13 +596,21 @@ router.post('/approve-creation/:requestId', [
 
         // TODO: Send email notification to requester
 
-        req.session.success = `Institution "${institution.name}" created successfully with ID ${institution.institutionId}. ${request.requestedBy.email} assigned as administrator.`;
-        res.redirect('/institution-request/pending-creations');
+        // Return JSON for AJAX request
+        res.json({
+            success: true,
+            message: `Institution "${institution.name}" created successfully with ID ${institution.institutionId}`,
+            institutionName: institution.name,
+            institutionId: institution.institutionId,
+            requesterEmail: request.requestedBy.email
+        });
 
     } catch (error) {
         logger.error('Approve creation error', { error: error.message, stack: error.stack });
-        req.session.error = 'An error occurred while approving the request';
-        res.redirect('/institution-request/pending-creations');
+        res.status(500).json({
+            success: false,
+            error: 'An error occurred while approving the request'
+        });
     }
 });
 

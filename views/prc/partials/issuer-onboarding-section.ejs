@@ -46,6 +46,33 @@
                                             <small class="badge bg-secondary"><%= user.country %>:<%= user.institutionId %></small>
                                         </div>
                                     <% } %>
+                                <% } else if (typeof pendingInstitutionRequest !== 'undefined' && pendingInstitutionRequest) { %>
+                                    <!-- Show pending status when request is awaiting approval -->
+                                    <div class="alert alert-info mb-2 py-2 px-2">
+                                        <i class="bi bi-clock-history me-1"></i>
+                                        <strong>Approval Pending</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block mb-1">
+                                            <% if (pendingInstitutionRequest.requestType === 'create') { %>
+                                                <strong>Creating Institution:</strong><br>
+                                                <%= pendingInstitutionRequest.institutionName %> (<%= pendingInstitutionRequest.institutionCountry %>)
+                                            <% } else { %>
+                                                <strong>Joining Institution:</strong><br>
+                                                <% if (pendingInstitutionRequest.institutionId) { %>
+                                                    <%= pendingInstitutionRequest.institutionId.name %> (<%= pendingInstitutionRequest.institutionId.country %>)
+                                                <% } %>
+                                            <% } %>
+                                        </small>
+                                    </div>
+                                    <small class="text-muted d-block">
+                                        Submitted: <%= new Date(pendingInstitutionRequest.createdAt).toLocaleDateString() %>
+                                    </small>
+                                    <div class="mt-2">
+                                        <a href="/institution-request/my-requests" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-list-ul me-1"></i>View Status
+                                        </a>
+                                    </div>
                                 <% } else { %>
                                     <div class="btn-group-vertical w-100" role="group">
                                         <a href="/institution-request/create" class="btn btn-warning btn-sm mb-2">
